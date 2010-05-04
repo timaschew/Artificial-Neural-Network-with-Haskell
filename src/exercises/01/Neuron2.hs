@@ -9,6 +9,7 @@ main = do
 	inh <- openFile "neuron" ReadMode
 	let l = [] :: [Double]
 	readLineLoop inh l
+	-- print empty list
 	print l
 	
 	-- don'work yet
