@@ -1,24 +1,27 @@
 import System.IO
 
 --
--- This is only the file reader
+-- read file "neuron" and generate a Neuron instance
 --
 
+makeDouble :: String -> Double
+makeDouble s = read s :: Double
+
+data Neuron = Neuron {
+	treshold :: Double, 
+	weights :: [Double]
+	} deriving (Show)
+
+main :: IO ()
 main = do
-	-- alternative file reading
---	handle <- openFile "neuron" ReadMode
---	contents <- hGetContents handle
---	-- read lines
---	hClose handle
+	input <- readFile "neuron"
+	let list = lines input
 
-	contents <- readFile "neuron"
-	putStr contents
+	let comment = list !! 0
+	let treshold = makeDouble (list !! 1)
+	let weights = map makeDouble $ drop 2 list :: [Double]
 
-	let allLines = lines contents
-	putStr $ "line[0] = " ++ allLines !! 0 ++ "\n"
-	putStr $ "line[1] = " ++ allLines !! 1 ++ "\n"
-	putStr $ "line[2] = " ++ allLines !! 2 ++ "\n"
-
--- getL allLines index = allLines !! 0
--- printL singleLine index = putStr "line[" ++ index ++ "] = " + singleLine
--- printAllLines allLines = printL allLines TODO
+	let n = Neuron treshold weights
+	putStrLn $ "Datei eingelesen (" ++ comment ++ ")"
+	print n
+	
