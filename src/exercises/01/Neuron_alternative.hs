@@ -9,18 +9,15 @@ main = do
 	inh <- openFile "neuron" ReadMode
 	let l = [] :: [Double]
 	readLineLoop inh l
-	-- print empty list
-	print l
 	
-	-- don'work yet
-	--let threshold = (lines contents) !! 1
-	--let n = Neuron threshold l
-	--print "fertig"
+	-- list is empty! do not save the calculations of readLineLoop in l
+	print l
 	
 readLineLoop :: Handle -> [Double] -> IO ()
 readLineLoop inh list = do 
 	is_eof <- hIsEOF inh
 	if is_eof
+		-- could not use "return list" => errors
 		then return()
 		else do
 			inpStr <- hGetLine inh
