@@ -1,27 +1,30 @@
-import System.IO
+import System.IO -- need to run as GHCi session (in eclipse)
 
-data Neuron = Neuron {	treashold :: Double
-					, weights :: [Double]
-					} deriving (Show)
+data Neuron = Neuron {
+	treashold :: Double,
+	weights :: [Double]
+	} deriving (Show)
 
 main = do
 
 	inh <- openFile "neuron" ReadMode
 	let l = [] :: [Double]
-	readLineLoop inh l
+	let listresult = readLineLoop inh l
 	
-	-- list is empty! do not save the calculations of readLineLoop in l
-	print l
+	-- could not cast from IO [Double] to [Double]
+	print listresult
 	
-readLineLoop :: Handle -> [Double] -> IO ()
+	let n = Neuron 0.5 listresult
+	print n
+	
+
 readLineLoop inh list = do 
 	is_eof <- hIsEOF inh
 	if is_eof
 		-- could not use "return list" => errors
-		then return()
+		then return list
 		else do
 			inpStr <- hGetLine inh
 			let val = read inpStr :: Double
-			putStrLn inpStr
 			readLineLoop inh (val:list)
 
