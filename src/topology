@@ -1,0 +1,4 @@
+# Topology for ANN. Structure: 1 = Input neurons, <N> = Output neurons, other = Hidden neurons
+1 1
+2 2 2
+3
