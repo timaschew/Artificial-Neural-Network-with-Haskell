@@ -9,11 +9,7 @@
 -- * if time and motivation, add backpropagation
 
 module Main where
-
 import Neuron
-
-
-
 
 -- sigmoid function
 sigmoidFunction :: (Floating a) => a -> a
@@ -30,25 +26,22 @@ n3_1 = Neuron 0 0 [0.264, 0.633]
 
 network = [[n1_1, n1_2], [n2_1, n2_2], [n3_1]]
 
-
-calc inputNeurons outputNeuron = do
-	let state1 = state (inputNeurons !! 0) 
-	let state2 = state (inputNeurons !! 1)
-	let inputSum1 = state1 * ((weight outputNeuron) !! 0)
-	let inputSum2 = state2 * ((weight outputNeuron) !! 1)
-	return (inputSum1 + inputSum2)
+-- calculate state * weight + offset
+-- use offset for calculation in previous recursion
+calc (n:[]) (x:[]) c = (state n) * x + c
+calc (n:ns) (x:xs) c = calc (ns) (xs) ((state n) * x + c)
 
 main::IO()
 main = do
 
-	tmp <- calc [n1_1, n1_2] n2_1
+	let tmp = calc [n1_1, n1_2] (weight n2_1) 0
 	let n2_1_n = Neuron (tmp) (sigmoidFunction tmp) (weight n2_1)
-	tmp <- calc [n1_1, n1_2] n2_2
+	let tmp = calc [n1_1, n1_2] (weight n2_2) 0
 	let n2_2_n = Neuron (tmp) (sigmoidFunction tmp) (weight n2_2)
 	putStrLn $ "n2_1: " ++ show n2_1_n
 	putStrLn $ "n2_2: " ++ show n2_2_n
 	
-	tmp <- calc [n2_1_n, n2_2_n] n3_1
+	let tmp = calc [n2_1_n, n2_2_n] (weight n3_1) 0
 	let n3_1_n = Neuron (tmp) (sigmoidFunction tmp) (weight n3_1)
 	putStrLn $ "n3_1: " ++ show n3_1_n
 	
