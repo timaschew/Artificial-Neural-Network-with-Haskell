@@ -17,30 +17,26 @@ sigmoidFunction x = 1 / (1 + (exp (-x)))
 
 -- calculate state * weight + offset
 -- use offset for calculation in previous recursion
--- [Neuron] => [Double] => Double
-calc (n:[]) (x:[]) c = (state n) * x + c
+calc :: [Neuron] -> [Double] -> Double -> Double
+calc [] [] c = c
 calc (n:ns) (x:xs) c = calc (ns) (xs) ((state n) * x + c)
 
 -- TODO: Shoud  be tested, whether the result is correct
 -- dynamic calculating from leftLayer to rightLayer
 -- works ONLY with 3 layers (1x input, 1x hidden, 1x output)
--- parameter: leftLayer firstNeuronOfRightLayer previousCalculatedNeurons
-calcLayer :: (Monad m) => [Neuron] -> [Neuron] -> [Neuron] -> m [Neuron]
--- return: previousNeuronList (c) ++ calc last Neuron
-calcLayer leftLayer (rn:[]) c = return (c ++ (Neuron (iSum) (sta) (weight rn)):[])
-	where
-	iSum = calc leftLayer (weight rn) 0
-	sta = sigmoidFunction (calc leftLayer (weight rn) 0)
 -- recursion: call calcLayer with leftLayer an rs and calcedFirstNeuron
 -- calcedFirstNeuron: previousNeuronList (c) ++ current Neuron (calculated with Neuron constructor) as List
+calcLayer :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
+calcLayer leftLayer [] c = c
 calcLayer leftLayer (r:rs) c = calcLayer leftLayer (rs) (c ++ (Neuron (iSum) (sta) (weight r)):[])
 	where
 	iSum = calc leftLayer (weight r) 0
 	sta = sigmoidFunction (calc leftLayer (weight r) 0)
 
--- TODO: remove this style of output: \"\\\"\\\\\\\"\\\\\\\" 1.0\\\" 0.0\" 0.0"
+-- TODO: remove this style of output: "\"\\\"\\\" 1.0\" 0.0" 0.0
 -- 	 let the output look like this: 1.0 0.0 0.0
 -- print state of [Neuron]
+printState :: [Neuron] -> [Char] -> [Char]
 printState (n:[]) c = (show c ++ " " ++ (show (state n)))
 printState (n:list) c = printState list (show c ++ " " ++ (show $(state n)))
 -- wrong order but wihout escaped backslashes: (show $ state n) ++ ", " ++ c
@@ -83,18 +79,15 @@ inputLayer = network !! 0
 hiddenLayer = network !! 1
 outputLayer = network !! 2
 
--- Why its [[Neuron]] and not [Neuron] ?
-calcedHiddenLayer :: [[Neuron]]
+calcedHiddenLayer :: [Neuron]
 calcedHiddenLayer = calcLayer inputLayer hiddenLayer []
 
-calcedOutput :: [[Neuron]]
-calcedOutput = calcLayer (calcedHiddenLayer !! 0) outputLayer []
+calcedOutput :: [Neuron]
+calcedOutput = calcLayer calcedHiddenLayer outputLayer []
 
 main::IO()
 main = do
 
-	print $ "In << " ++ (printState inputLayer "")
-	print $ "Out >> " ++ (printState (calcedOutput !! 0) "")
-	
-	putStrLn ""
+	putStrLn $ "In << " ++ (printState inputLayer "")
+	putStrLn $ "Out >> " ++ (printState calcedOutput "")
 	
