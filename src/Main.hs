@@ -38,22 +38,32 @@ calcLayer leftLayer (r:rs) c = calcLayer leftLayer (rs) (c ++ (Neuron (iSum) (st
 	iSum = calc leftLayer (weight r) 0
 	sta = sigmoidFunction (calc leftLayer (weight r) 0)
 
+-- TODO: remove this style of output: \"\\\"\\\\\\\"\\\\\\\" 1.0\\\" 0.0\" 0.0"
+-- 	 let the output look like this: 1.0 0.0 0.0
+-- print state of [Neuron]
+printState (n:[]) c = (show c ++ " " ++ (show (state n)))
+printState (n:list) c = printState list (show c ++ " " ++ (show $(state n)))
+-- wrong order but wihout escaped backslashes: (show $ state n) ++ ", " ++ c
+
 -- #################################
 -- Topology and Neuron Configuration
 
 -- input
 n1_1 = Neuron 0 1.000 []
-n1_2 = Neuron 0 0.500 []
-n1_3 = Neuron 0 0.200 []
+n1_2 = Neuron 0 0.000 []
+n1_3 = Neuron 0 0.000 []
 -- hidden
-n2_1 = Neuron 0 0 [0.123, 0.234, 0.532]
-n2_2 = Neuron 0 0 [0.987, 0.876, 0.642]
-n2_3 = Neuron 0 0 [0.157, 0.323, 0.149]
-n2_4 = Neuron 0 0 [0.634, 0.256, 0.342]
+n2_1 = Neuron 0 0 [0.678, 0.211, -0.761]
+n2_2 = Neuron 0 0 [0.033, -0.429, -0.938]
+n2_3 = Neuron 0 0 [0.763, -0.904, -0.330]
+n2_4 = Neuron 0 0 [0.223, 0.194, 0.189]
 -- output
-n3_1 = Neuron 0 0 [0.264, 0.633, 0.831, 0.253]
+n3_1 = Neuron 0 0 [0.632, 0.952, 0.742, -0.968]
 
 network = [[n1_1, n1_2, n1_3], [n2_1, n2_2, n2_3, n2_4], [n3_1]]
+
+-- output of n3_1 should be = 0.705 
+
 -- #################################
 
 -- input output example: 2 x 2 x 1 topology
@@ -83,8 +93,8 @@ calcedOutput = calcLayer (calcedHiddenLayer !! 0) outputLayer []
 main::IO()
 main = do
 
-	-- TODO: function, which prints only state of Neurons
-	putStrLn $ "In << (" ++ (show inputLayer) ++ ")"
-	putStrLn $ "Out >> " ++ (show calcedOutput)
+	print $ "In << " ++ (printState inputLayer "")
+	print $ "Out >> " ++ (printState (calcedOutput !! 0) "")
+	
 	putStrLn ""
 	
