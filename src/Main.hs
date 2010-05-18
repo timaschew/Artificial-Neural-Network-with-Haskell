@@ -35,6 +35,13 @@ sigmoidFunction x = 1 / (1 + (exp (-x)))
 
 -- calculate state * weight + offset
 -- use offset for calculation in previous recursion
+-- @param [Neuron]:	Neuron list of a single layer
+-- @param [Double]: Neuron weights (w.i) of layer n for a certain Neuron of layer n+1: 
+--
+--	[List of Neurons] ---- w.i ---->  [single Neuron] (layer n + 1)
+--
+-- @return Double: offset
+-- @return Double: netinput (sum) for a certain Neuron of layer n + 1
 calc :: [Neuron] -> [Double] -> Double -> Double
 calc [] [] c = c
 calc (n:ns) (x:xs) c = calc (ns) (xs) ((state n) * x + c)
@@ -43,6 +50,7 @@ calc (n:ns) (x:xs) c = calc (ns) (xs) ((state n) * x + c)
 -- dynamic calculating from leftLayer to rightLayer
 -- recursion: call calcLayer with leftLayer an rs and calcedFirstNeuron
 -- calcedFirstNeuron: previousNeuronList (c) ++ current Neuron (calculated with Neuron constructor) as List
+-- QUESTION: avoid creating new list. use network in place instead?
 calcLayer :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
 calcLayer leftLayer [] c = c
 calcLayer leftLayer (r:rs) c = calcLayer leftLayer (rs) (c ++ (Neuron (iSum) (sta) (weight r)):[])
@@ -50,11 +58,34 @@ calcLayer leftLayer (r:rs) c = calcLayer leftLayer (rs) (c ++ (Neuron (iSum) (st
 	iSum = calc leftLayer (weight r) 0
 	sta = sigmoidFunction (calc leftLayer (weight r) 0)
 
+
+--
+-- FORWARD PASS
+--
+-- TODO: test state values. Note: it returns a network without the input layer yet.
+-- use this method to do the 1. algo step. Example: printNet forwardPass network [[]] 
+-- @params: currentNet newNet
+-- @return new network
+forwardPass :: [[Neuron]] -> [[Neuron]] -> [[Neuron]]
+forwardPass [] newNet = newNet
+forwardPass (l:ls) newNet =  forwardPass ls (newNet ++ [calcLayer l nextLayer []])
+	where 
+	nextLayer | length ls == 0 = []
+			  | otherwise = (head ls)
+
+
 printState :: [Neuron] -> IO()
 printState neuronList = do
 	let stateList = map (\n -> state n) neuronList
 	let result = zipWith (\state i ->  "n[" ++ show i ++ "].state = " ++ show state) stateList [1..]
 	putStr $ unlines result
+
+printNet :: [[Neuron]] -> IO()
+printNet network = do
+	let neuronList = concat network
+	let result = zipWith (\neuron i ->  "n[" ++ show i ++ "] : " ++ show neuron) neuronList [1..]
+	putStr $ unlines result
+	
 
 -- #################################
 -- Topology and Neuron Configuration
