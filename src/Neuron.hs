@@ -11,5 +11,6 @@ data Neuron = Neuron {
 defaultNeuron = Neuron { inputSum = 0, state = 0, weight = [], delta = 0, deltaWeight = [] } -- default Neuron
 
 makeNeuron iSum sta wei = Neuron iSum sta wei 0 [] -- old constructor compatibility
+makeDelta n d = Neuron (inputSum n) (state n) (weight n) d (deltaWeight n) -- alternative delta setter
 
 type Network = [[Neuron]]

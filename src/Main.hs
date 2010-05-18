@@ -47,6 +47,8 @@ printState neuronList = do
 	let result = zipWith (\state i ->  "n[" ++ show i ++ "].state = " ++ show state) stateList [1..]
 	putStr $ unlines result
 
+
+
 -- #################################
 -- Backpropagation Configuration
 learnRate = 0.350
@@ -98,6 +100,19 @@ calcedOutput = calcLayer calcedHiddenLayer outputLayer []
 calcedNetwork = [inputLayer, calcedHiddenLayer, calcedOutput]
 
 -- start step 2: calculate error
+-- manuel hardcoded static way
+
+-- expected values: input: (1,0,0) / output: 1
+expectedValue = 1
+deltaOutputNeuron = calcOutputDelta calcedOutput expectedValue
+
+-- calc delta for first neuron of calced outputLayer
+-- TODO: check the result, maybe wrong
+calcOutputDelta outputLayer expected = makeDelta (n) delta
+	where
+	n = outputLayer !! 0
+	s = (state n)
+	delta = (expected * s) * s * (1 - s)
 
 main::IO()
 main = do
