@@ -1,12 +1,30 @@
--- Implementation of file operations and a trivial calculation functions for
--- a very simple(!) artificial neuron.
---
--- TODO
--- * connect multiple neurons. either extend Neuron type or create an
--- additional type NeuronNetwork.
--- * add trivial learning algorithm, e.g. for perceptrons.
--- * add more boilerplate code for (automated) testing
--- * if time and motivation, add backpropagation
+{--
+
+artificial neural network with backpropagation as teaching method.
+
+backpropagation algo:
+1) forward pass
+2) calculate error
+3) backward pass
+
+
+topology:
+- at least 1 hidden layer
+- feedforward (no shortcuts, each neuron has a connection to each neuron of the next layer, without any back connections)
+
+
+TODO:
+- fa(x): activate function
+- fo(x): output function fo(fa(x)) 
+
+- learnrate
+- momentum
+- expected teaching values
+- teaching steps count
+- more neuron attributes: name, delta... ????
+- add more boilerplate code for (automated) testing
+--}
+
 
 module Main where
 import Neuron
@@ -23,7 +41,6 @@ calc (n:ns) (x:xs) c = calc (ns) (xs) ((state n) * x + c)
 
 -- TODO: Shoud  be tested, whether the result is correct
 -- dynamic calculating from leftLayer to rightLayer
--- works ONLY with 3 layers (1x input, 1x hidden, 1x output)
 -- recursion: call calcLayer with leftLayer an rs and calcedFirstNeuron
 -- calcedFirstNeuron: previousNeuronList (c) ++ current Neuron (calculated with Neuron constructor) as List
 calcLayer :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
@@ -33,13 +50,11 @@ calcLayer leftLayer (r:rs) c = calcLayer leftLayer (rs) (c ++ (Neuron (iSum) (st
 	iSum = calc leftLayer (weight r) 0
 	sta = sigmoidFunction (calc leftLayer (weight r) 0)
 
--- TODO: remove this style of output: "\"\\\"\\\" 1.0\" 0.0" 0.0
--- 	 let the output look like this: 1.0 0.0 0.0
--- print state of [Neuron]
-printState :: [Neuron] -> [Char] -> [Char]
-printState (n:[]) c = (show c ++ " " ++ (show (state n)))
-printState (n:list) c = printState list (show c ++ " " ++ (show $(state n)))
--- wrong order but wihout escaped backslashes: (show $ state n) ++ ", " ++ c
+printState :: [Neuron] -> IO()
+printState neuronList = do
+	let stateList = map (\n -> state n) neuronList
+	let result = zipWith (\state i ->  "n[" ++ show i ++ "].state = " ++ show state) stateList [1..]
+	putStr $ unlines result
 
 -- #################################
 -- Topology and Neuron Configuration
@@ -74,20 +89,26 @@ network = [[n1_1, n1_2, n1_3], [n2_1, n2_2, n2_3, n2_4], [n3_1]]
 
 -- start calculating
 
--- works ONLY with 3 layers (1x input, 1x hidden, 1x output)
-inputLayer = network !! 0
-hiddenLayer = network !! 1
-outputLayer = network !! 2
+-- works with >=3 layers now. TODO: error handling for layer length <3
+inputLayer = head network
+hiddenLayers = tail (init network)
+hiddenLayer1 = hiddenLayers !! 0
+-- TODO: dont ignore other hiddenLayer, currently only first hidden layer works
+outputLayer = last network
 
 calcedHiddenLayer :: [Neuron]
-calcedHiddenLayer = calcLayer inputLayer hiddenLayer []
+calcedHiddenLayer = calcLayer inputLayer hiddenLayer1 []
 
 calcedOutput :: [Neuron]
 calcedOutput = calcLayer calcedHiddenLayer outputLayer []
 
+calcedNetwork = [inputLayer, calcedHiddenLayer, calcedOutput]
+
 main::IO()
 main = do
 
-	putStrLn $ "In << " ++ (printState inputLayer "")
-	putStrLn $ "Out >> " ++ (printState calcedOutput "")
+	--putStrLn $ "In << " ++ (printState inputLayer "")
+	--putStrLn $ "Out >> " ++ (printState calcedOutput "")
+	
+	printState $ concat calcedNetwork
 	
