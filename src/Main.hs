@@ -2,29 +2,20 @@
 
 artificial neural network with backpropagation as teaching method.
 
-backpropagation algo:
+backpropagation algo steps:
 1) forward pass
 2) calculate error
 3) backward pass
-
 
 topology:
 - at least 1 hidden layer
 - feedforward (no shortcuts, each neuron has a connection to each neuron of the next layer, without any back connections)
 
-
 TODO:
-- fa(x): activate function
-- fo(x): output function fo(fa(x)) 
-
-- learnrate
-- momentum
 - expected teaching values
 - teaching steps count
-- more neuron attributes: name, delta... ????
 - add more boilerplate code for (automated) testing
 --}
-
 
 module Main where
 import Neuron
@@ -45,7 +36,7 @@ calc (n:ns) (x:xs) c = calc (ns) (xs) ((state n) * x + c)
 -- calcedFirstNeuron: previousNeuronList (c) ++ current Neuron (calculated with Neuron constructor) as List
 calcLayer :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
 calcLayer leftLayer [] c = c
-calcLayer leftLayer (r:rs) c = calcLayer leftLayer (rs) (c ++ (Neuron (iSum) (sta) (weight r)):[])
+calcLayer leftLayer (r:rs) c = calcLayer leftLayer (rs) (c ++ (makeNeuron iSum sta (weight r)):[])
 	where
 	iSum = calc leftLayer (weight r) 0
 	sta = sigmoidFunction (calc leftLayer (weight r) 0)
@@ -57,24 +48,26 @@ printState neuronList = do
 	putStr $ unlines result
 
 -- #################################
--- Topology and Neuron Configuration
+-- Backpropagation Configuration
+learnRate = 0.350
+momentum = 0.15
 
+-- Topology and Neuron Configuration
 -- input
-n1_1 = Neuron 0 1.000 []
-n1_2 = Neuron 0 0.000 []
-n1_3 = Neuron 0 0.000 []
+n1_1 = defaultNeuron {state = 1}
+n1_2 = defaultNeuron
+n1_3 = defaultNeuron
 -- hidden
-n2_1 = Neuron 0 0 [0.678, 0.211, -0.761]
-n2_2 = Neuron 0 0 [0.033, -0.429, -0.938]
-n2_3 = Neuron 0 0 [0.763, -0.904, -0.330]
-n2_4 = Neuron 0 0 [0.223, 0.194, 0.189]
+n2_1 = defaultNeuron { weight = [0.678, 0.211, -0.761] }
+n2_2 = defaultNeuron { weight = [0.033, -0.429, -0.938] }
+n2_3 = defaultNeuron { weight = [0.763, -0.904, -0.330] }
+n2_4 = defaultNeuron { weight = [0.223, 0.194, 0.189] }
 -- output
-n3_1 = Neuron 0 0 [0.632, 0.952, 0.742, -0.968]
+n3_1 = defaultNeuron { weight = [0.632, 0.952, 0.742, -0.968] }
 
 network = [[n1_1, n1_2, n1_3], [n2_1, n2_2, n2_3, n2_4], [n3_1]]
 
 -- output of n3_1 should be = 0.705 
-
 -- #################################
 
 -- input output example: 2 x 2 x 1 topology
@@ -87,7 +80,7 @@ network = [[n1_1, n1_2, n1_3], [n2_1, n2_2, n2_3, n2_4], [n3_1]]
 -- n2_2 = 1.425
 -- n3_1 = 0.658
 
--- start calculating
+-- start step 1: forward pass
 
 -- works with >=3 layers now. TODO: error handling for layer length <3
 inputLayer = head network
@@ -104,11 +97,12 @@ calcedOutput = calcLayer calcedHiddenLayer outputLayer []
 
 calcedNetwork = [inputLayer, calcedHiddenLayer, calcedOutput]
 
+-- start step 2: calculate error
+
 main::IO()
 main = do
-
-	--putStrLn $ "In << " ++ (printState inputLayer "")
-	--putStrLn $ "Out >> " ++ (printState calcedOutput "")
 	
 	printState $ concat calcedNetwork
+	putStr $ "output: "
+	printState $ concat [calcedOutput]
 	
