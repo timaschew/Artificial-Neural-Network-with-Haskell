@@ -131,17 +131,74 @@ calcedNetwork = [inputLayer, calcedHiddenLayer, calcedOutput]
 -- start step 2: calculate error
 -- manuel hardcoded static way
 
--- expected values: input: (1,0,0) / output: 1
-expectedValue = 1
-deltaOutputNeuron = calcOutputDelta calcedOutput expectedValue
-
 -- calc delta for first neuron of calced outputLayer
--- TODO: check the result, maybe wrong
 calcOutputDelta outputLayer expected = makeDelta (n) delta
 	where
 	n = outputLayer !! 0
 	s = (state n)
-	delta = (expected * s) * s * (1 - s)
+	delta = (expected - s) * s * (1 - s)
+
+-- start step 3: backward pass
+
+-- backpass algo steps:
+-- 0) calculating deltas of output layer
+
+-- 1) calculating weight deltas between outputlayer and previous layer
+-- 2) calculating new weights
+-- 3) calculating delta of previous layer
+
+-- repeat step 1-3 until previous layer is inputlayer
+
+-- calc recursivly weights between n and rn
+-- @param n = neuron
+-- @param w/weights - weights of neuron
+-- @param rn = right neuron (using ONLY delta of its => TODO?)
+-- @param result = recursion result
+calcDeltaWeightsOfNeuron :: Neuron -> [Double] -> Neuron -> [Double] -> [Double]
+calcDeltaWeightsOfNeuron n [] rn result = result
+calcDeltaWeightsOfNeuron n (w:weights) rn result = calcDeltaWeightsOfNeuron n weights rn (result ++ c:[])
+	where
+	-- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1] + M * this(t-1)
+	c = learnRate * (delta rn) * (state n) + momentum * 0.0000000
+	-- Don't use momentum (not need for first learn iteration
+	-- Have to restructure the Neuron data type, no access for this(t-1) without indices for neuron position
+
+-- return new calculated neuron with delta weights between n and rightNeuron
+-- @param n = neuron
+-- @param rn = next/right neuron
+-- @param l = learn rate
+-- @param m = momentum
+deltaWeightFormula :: Neuron -> Neuron -> Neuron
+deltaWeightFormula n rightNeuron = makeWeights n calcedWeights
+	where
+	calcedWeights = calcDeltaWeightsOfNeuron n (weight n) rightNeuron []	
+
+-- start calculating weights between neuron and its next / right Layer
+-- @param n = neuron
+-- @param l = learn rate
+-- @param m = momentum
+-- @param r/rightLayer = next layer in view of neuron
+makeDeltaWeight :: Neuron -> [Neuron] -> [Neuron] -> [Neuron]
+makeDeltaWeight n [] offset = offset
+makeDeltaWeight n (r:rightLayer) offset = makeDeltaWeight n rightLayer (offset ++ (deltaWeightFormula n r):[])
+
+-- start calculating all weights between leftLayer and rightLayer
+-- @param neuron/leftLayer - 
+-- @param rightLayer
+-- @param result
+calcWeightDeltas :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
+calcWeightDeltas [] rightLayer result = result
+calcWeightDeltas (neuron:leftLayer) rightLayer result = calcWeightDeltas leftLayer rightLayer (result ++ c)
+	where
+	c = makeDeltaWeight neuron rightLayer []
+
+-- expected values: input: (1,0,0) / output: 1
+expectedValue = 1
+deltaOutputNeuron = calcOutputDelta calcedOutput expectedValue
+
+-- backpass step 1
+-- TODO: check if result is correct
+backpropagation = calcWeightDeltas calcedHiddenLayer [deltaOutputNeuron] []
 
 main::IO()
 main = do
