@@ -92,11 +92,10 @@ n1_3 = defaultNeuron
 n2_1 = defaultNeuron { weight = [0.678, 0.211, -0.761] }
 n2_2 = defaultNeuron { weight = [0.033, -0.429, -0.938] }
 n2_3 = defaultNeuron { weight = [0.763, -0.904, -0.330] }
-n2_4 = defaultNeuron { weight = [0.223, 0.194, 0.189] }
 -- output
-n3_1 = defaultNeuron { weight = [0.632, 0.952, 0.742, -0.968] }
+n3_1 = defaultNeuron { weight = [0.632, 0.952, 0.742] }
 
-network = [[n1_1, n1_2, n1_3], [n2_1, n2_2, n2_3, n2_4], [n3_1]]
+network = [[n1_1, n1_2, n1_3], [n2_1, n2_2, n2_3], [n3_1]]
 
 -- output of n3_1 should be = 0.705 
 -- #################################
@@ -154,9 +153,9 @@ calcOutputDelta outputLayer expected = makeDelta (n) delta
 -- @param w/weights - weights of neuron
 -- @param rn = right neuron (using ONLY delta of its => TODO?)
 -- @param result = recursion result
-calcDeltaWeightsOfNeuron :: Neuron -> [Double] -> Neuron -> [Double] -> [Double]
-calcDeltaWeightsOfNeuron n [] rn result = result
-calcDeltaWeightsOfNeuron n (w:weights) rn result = calcDeltaWeightsOfNeuron n weights rn (result ++ c:[])
+calcDeltaWeightsOfNeuron :: Neuron -> Neuron -> [Double] -> [Double] -> [Double]
+calcDeltaWeightsOfNeuron n rn [] result = result
+calcDeltaWeightsOfNeuron n rn (w:weights) result = calcDeltaWeightsOfNeuron n rn weights (result ++ c:[])
 	where
 	-- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1] + M * this(t-1)
 	c = learnRate * (delta rn) * (state n) + momentum * 0.0000000
@@ -169,9 +168,9 @@ calcDeltaWeightsOfNeuron n (w:weights) rn result = calcDeltaWeightsOfNeuron n we
 -- @param l = learn rate
 -- @param m = momentum
 deltaWeightFormula :: Neuron -> Neuron -> Neuron
-deltaWeightFormula n rightNeuron = makeWeights n calcedWeights
+deltaWeightFormula n rightNeuron = makeWeights rightNeuron calcedWeights
 	where
-	calcedWeights = calcDeltaWeightsOfNeuron n (weight n) rightNeuron []	
+	calcedWeights = calcDeltaWeightsOfNeuron n rightNeuron (weight rightNeuron) []	
 
 -- start calculating weights between neuron and its next / right Layer
 -- @param n = neuron
@@ -193,11 +192,12 @@ calcWeightDeltas (neuron:leftLayer) rightLayer result = calcWeightDeltas leftLay
 	c = makeDeltaWeight neuron rightLayer []
 
 -- expected values: input: (1,0,0) / output: 1
-expectedValue = 1
+expectedValue = 0
 deltaOutputNeuron = calcOutputDelta calcedOutput expectedValue
 
 -- backpass step 1
--- TODO: check if result is correct
+-- values correct, but TODO: deltaWeight have the same value multiple times, need fix 
+-- wrong multiple values look like this: Neuron {..., deltaWeight = [-0.029, -0.029, 0.029], ...}
 backpropagation = calcWeightDeltas calcedHiddenLayer [deltaOutputNeuron] []
 
 main::IO()

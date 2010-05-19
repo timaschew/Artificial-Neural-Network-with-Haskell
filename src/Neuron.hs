@@ -3,7 +3,7 @@ module Neuron where
 data Neuron = Neuron {
 	inputSum :: Double, -- sum of all neurons from previous layer
 	state :: Double, -- f(sum) = sigmoidFunciton(sum) - fire this value to all neurons of next layer
-	weight :: [Double], -- weights for the neurons of the next layer
+	weight :: [Double], -- weights for the neuron for the inputs of the previous layer
 	delta :: Double, -- quadratic error (diff between expected and calculated value)
 	deltaWeight :: [Double] -- for the main formula with learnrate and momentum
 	} deriving (Show, Eq)
