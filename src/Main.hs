@@ -153,52 +153,52 @@ calcOutputDelta outputLayer expected = makeDelta (n) delta
 -- @param w/weights - weights of neuron
 -- @param rn = right neuron (using ONLY delta of its => TODO?)
 -- @param result = recursion result
-calcDeltaWeightsOfNeuron :: Neuron -> Neuron -> [Double] -> [Double] -> [Double]
-calcDeltaWeightsOfNeuron n rn [] result = result
-calcDeltaWeightsOfNeuron n rn (w:weights) result = calcDeltaWeightsOfNeuron n rn weights (result ++ c:[])
+calcDeltaWeightsOfNeuron :: [Double] -> Neuron -> [Double] -> [Double] -> [Double]
+calcDeltaWeightsOfNeuron [] rn [] result = result
+calcDeltaWeightsOfNeuron (s:states) rn (w:weights) result = calcDeltaWeightsOfNeuron states rn weights (result ++ c:[])
 	where
 	-- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1] + M * this(t-1)
-	c = learnRate * (delta rn) * (state n) + momentum * 0.0000000
+	c = learnRate * (delta rn) * s + momentum * 0.0000000
 	-- Don't use momentum (not need for first learn iteration
 	-- Have to restructure the Neuron data type, no access for this(t-1) without indices for neuron position
 
--- return new calculated neuron with delta weights between n and rightNeuron
--- @param n = neuron
--- @param rn = next/right neuron
--- @param l = learn rate
--- @param m = momentum
-deltaWeightFormula :: Neuron -> Neuron -> Neuron
-deltaWeightFormula n rightNeuron = makeWeights rightNeuron calcedWeights
+-- filters the layer of neurons only for state:
+makeStateListOfLayer :: [Neuron] -> [Double] -> [Double]
+makeStateListOfLayer [] result = result
+makeStateListOfLayer (l:layer) result = makeStateListOfLayer layer (result ++ (state l):[])
+
+-- create new neuron with calculated weight delta (previous layer (only states) also needed: leftLayer)
+makeDeltaWeight :: [Neuron] -> Neuron -> [Neuron] -> Neuron
+makeDeltaWeight leftLayer r result = newNeuron
 	where
-	calcedWeights = calcDeltaWeightsOfNeuron n rightNeuron (weight rightNeuron) []	
+	leftLayerStates = makeStateListOfLayer leftLayer []	
+	calcedWeights = calcDeltaWeightsOfNeuron leftLayerStates r (weight r) []
+	newNeuron = makeDeltaWeights r calcedWeights
 
--- start calculating weights between neuron and its next / right Layer
--- @param n = neuron
--- @param l = learn rate
--- @param m = momentum
--- @param r/rightLayer = next layer in view of neuron
-makeDeltaWeight :: Neuron -> [Neuron] -> [Neuron] -> [Neuron]
-makeDeltaWeight n [] offset = offset
-makeDeltaWeight n (r:rightLayer) offset = makeDeltaWeight n rightLayer (offset ++ (deltaWeightFormula n r):[])
-
--- start calculating all weights between leftLayer and rightLayer
--- @param neuron/leftLayer - 
--- @param rightLayer
--- @param result
+-- creates and return the rightLayer with calculated weight deltas
 calcWeightDeltas :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
-calcWeightDeltas [] rightLayer result = result
-calcWeightDeltas (neuron:leftLayer) rightLayer result = calcWeightDeltas leftLayer rightLayer (result ++ c)
+calcWeightDeltas leftLayer [] result = result
+calcWeightDeltas leftLayer (r:rightLayer) result = calcWeightDeltas leftLayer rightLayer (result ++ c:[])
 	where
-	c = makeDeltaWeight neuron rightLayer []
+	c = makeDeltaWeight leftLayer r []
+
+-- update weights of given layer
+updateWeights [] result = result
+updateWeights (n:layer) result = updateWeights layer (result ++ (updateSingleWeight n (weight n) (deltaWeight n)):[])
+
+-- caclulate new weight with the formula: W[2][1][1](t+1) = W[2][1][1](t) + WD[2][1][1]
+updateSingleWeight :: Neuron -> [Double] -> [Double] -> Neuron
+updateSingleWeight neuron w deltaW = setWeights neuron (zipWith (+) w deltaW)
 
 -- expected values: input: (1,0,0) / output: 1
 expectedValue = 0
 deltaOutputNeuron = calcOutputDelta calcedOutput expectedValue
 
 -- backpass step 1
--- values correct, but TODO: deltaWeight have the same value multiple times, need fix 
--- wrong multiple values look like this: Neuron {..., deltaWeight = [-0.029, -0.029, 0.029], ...}
-backpropagation = calcWeightDeltas calcedHiddenLayer [deltaOutputNeuron] []
+backpropagation_step1 = calcWeightDeltas calcedHiddenLayer [deltaOutputNeuron] []
+
+-- backpass step 2
+backpropagation_step2 = updateWeights backpropagation_step1 []
 
 main::IO()
 main = do
