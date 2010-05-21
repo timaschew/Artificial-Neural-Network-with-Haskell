@@ -155,12 +155,16 @@ calcOutputDelta outputLayer expected = makeDelta (n) delta
 -- @param result = recursion result
 calcDeltaWeightsOfNeuron :: [Double] -> Neuron -> [Double] -> [Double] -> [Double]
 calcDeltaWeightsOfNeuron [] rn [] result = result
-calcDeltaWeightsOfNeuron (s:states) rn (w:weights) result = calcDeltaWeightsOfNeuron states rn weights (result ++ c:[])
+calcDeltaWeightsOfNeuron (s:states) rn (w:deltaWeights) result = calcDeltaWeightsOfNeuron states rn deltaWeights (result ++ c:[])
 	where
 	-- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1] + M * this(t-1)
-	c = learnRate * (delta rn) * s + momentum * 0.0000000
-	-- Don't use momentum (not need for first learn iteration
-	-- Have to restructure the Neuron data type, no access for this(t-1) without indices for neuron position
+	c = learnRate * (delta rn) * s + momentum * w
+
+calcDeltaWeightsOfNeuron (s:states) rn [] result = calcDeltaWeightsOfNeuron states rn [] (result ++ c:[])
+	where
+	-- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1]
+	c = learnRate * (delta rn) * s
+	-- Don't use momentum (not need for first learn iteration (no deltaWeights)
 
 -- filters the layer of neurons only for state:
 makeStateListOfLayer :: [Neuron] -> [Double] -> [Double]
@@ -172,7 +176,7 @@ makeDeltaWeight :: [Neuron] -> Neuron -> [Neuron] -> Neuron
 makeDeltaWeight leftLayer r result = newNeuron
 	where
 	leftLayerStates = makeStateListOfLayer leftLayer []	
-	calcedWeights = calcDeltaWeightsOfNeuron leftLayerStates r (weight r) []
+	calcedWeights = calcDeltaWeightsOfNeuron leftLayerStates r (deltaWeight r) []
 	newNeuron = makeDeltaWeights r calcedWeights
 
 -- creates and return the rightLayer with calculated weight deltas
@@ -191,7 +195,7 @@ updateSingleWeight :: Neuron -> [Double] -> [Double] -> Neuron
 updateSingleWeight neuron w deltaW = setWeights neuron (zipWith (+) w deltaW)
 
 -- expected values: input: (1,0,0) / output: 1
-expectedValue = 0
+expectedValue = 10
 deltaOutputNeuron = calcOutputDelta calcedOutput expectedValue
 
 -- backpass step 1
