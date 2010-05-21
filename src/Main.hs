@@ -35,13 +35,12 @@ How-To-Read
 TODO:
 - use foldl instead of recursivly list operations
 - reduce function calls with long parameters (use temp calculations)
-- don't append a empty list c:[] use this instead c :: []
-- fix forwardPass function
+- fix forwardPass function (call updated nextLayer in recurision) and fix infinite loop
 - add backwardPass function: inside it call steps: 3*, 3a, 3b, 3c
 - add step 3c functions
 - error handling using network with layer length <3 
 - use Haddock: http://www.haskell.org/haddock/
-- teaching steps count, exptected teaching values
+- interace between trainingdata file/parser and function calcError
 - add more boilerplate code for (automated) testing 
 	- topology parser
 	- network parser
@@ -145,7 +144,7 @@ forwardPass (l:ls) newNet =  forwardPass ls (newNet ++ [calcLayer l nextLayer []
 -- calcedFirstNeuron: previousNeuronList (c) ++ current Neuron (calculated with Neuron constructor) as List
 calcLayer :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
 calcLayer leftLayer [] c = c
-calcLayer leftLayer (r:rs) c = calcLayer leftLayer (rs) (c ++ (makeNeuron iSum sta (weights r)):[])
+calcLayer leftLayer (r:rs) c = calcLayer leftLayer (rs) (c ++ [(makeNeuron iSum sta (weights r))])
 	where
 	iSum = calcNeuron leftLayer (weights r) 0
 	sta = sigmoidFunction (calcNeuron leftLayer (weights r) 0)
@@ -180,12 +179,12 @@ calcError outputLayer expected = setDelta (n) delta
 -- filters the layer of neurons only for state:
 makeStateListOfLayer :: [Neuron] -> [Double] -> [Double]
 makeStateListOfLayer [] result = result
-makeStateListOfLayer (l:layer) result = makeStateListOfLayer layer (result ++ (state l):[])
+makeStateListOfLayer (l:layer) result = makeStateListOfLayer layer (result ++ [(state l)])
 
 -- creates and return the rightLayer with calculated weight deltas
 calcLayerDeltaWeigts :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
 calcLayerDeltaWeigts leftLayer [] result = result
-calcLayerDeltaWeigts leftLayer (r:rightLayer) result = calcLayerDeltaWeigts leftLayer rightLayer (result ++ c:[])
+calcLayerDeltaWeigts leftLayer (r:rightLayer) result = calcLayerDeltaWeigts leftLayer rightLayer (result ++ [c])
 	where
 	c = calcNeuronDeltaWeights leftLayer r []
 
@@ -204,12 +203,12 @@ calcNeuronDeltaWeights leftLayer r result = newNeuron
 -- @param result = recursion result
 calcDeltaWeight :: [Double] -> Neuron -> [Double] -> [Double] -> [Double]
 calcDeltaWeight [] rn [] result = result
-calcDeltaWeight (s:states) rn (w:deltaWeights) result = calcDeltaWeight states rn deltaWeights (result ++ c:[])
+calcDeltaWeight (s:states) rn (w:deltaWeights) result = calcDeltaWeight states rn deltaWeights (result ++ [c])
 	where
 	-- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1] + M * this(t-1)
 	c = learnRate * (delta rn) * s + momentum * w
 -- Don't use momentum (not need for first learn iteration (no deltaWeights)	
-calcDeltaWeight (s:states) rn [] result = calcDeltaWeight states rn [] (result ++ c:[])
+calcDeltaWeight (s:states) rn [] result = calcDeltaWeight states rn [] (result ++ [c])
 	where
 	-- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1]
 	c = learnRate * (delta rn) * s
@@ -218,8 +217,9 @@ calcDeltaWeight (s:states) rn [] result = calcDeltaWeight states rn [] (result +
 -- BACKWARD PASS (step 3b)
 --
 -- update weights of given layer
+updateLayerWeights :: [Neuron] -> [Neuron] -> [Neuron]
 updateLayerWeights [] result = result
-updateLayerWeights (n:layer) result = updateLayerWeights layer (result ++ (updateNeuronWeights n (weights n) (deltaWeights n)):[])
+updateLayerWeights (n:layer) result = updateLayerWeights layer (result ++ [(updateNeuronWeights n (weights n) (deltaWeights n))])
 
 -- caclulate new weight with the formula: W[2][1][1](t+1) = W[2][1][1](t) + WD[2][1][1]
 updateNeuronWeights :: Neuron -> [Double] -> [Double] -> Neuron

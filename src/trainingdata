@@ -1,6 +1,8 @@
 # structure for trainingdata
 # left side of dash = input layer
 # right side of dash = output layer
+# teaching steps number = number of training lines 
+#	(use same trainingdata multiple times? => need to config it in this file)
 
 # network
 # i i
