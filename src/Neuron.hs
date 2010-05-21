@@ -3,18 +3,21 @@ module Neuron where
 data Neuron = Neuron {
 	inputSum :: Double, -- sum of all neurons from previous layer
 	state :: Double, -- f(sum) = sigmoidFunciton(sum) - fire this value to all neurons of next layer
-	weight :: [Double], -- weights for the neuron for the inputs of the previous layer
+	weights :: [Double], -- weights for the neuron for the inputs of the previous layer
 	delta :: Double, -- quadratic error (diff between expected and calculated value)
-	deltaWeight :: [Double] -- for the main formula with learnrate and momentum
+	deltaWeights :: [Double] -- for the main formula with learnrate and momentum
 	} deriving (Show, Eq)
-
-defaultNeuron = Neuron { inputSum = 0, state = 0, weight = [], delta = 0, deltaWeight = [] } -- default Neuron
-
-makeNeuron iSum sta wei = Neuron iSum sta wei 0 [] -- old constructor compatibility
-makeDelta n d = Neuron (inputSum n) (state n) (weight n) d (deltaWeight n) -- alternative delta setter
-
-makeDeltaWeights n dw = Neuron (inputSum n) (state n) (weight n) (delta n) dw -- alternative weight setter
-
-setWeights n w = Neuron (inputSum n) (state n) (w) (delta n) (deltaWeight n) -- alternative weight setter
-
+	
 type Network = [[Neuron]]
+
+defaultNeuron = Neuron { inputSum = 0, state = 0, weights = [], delta = 0, deltaWeights = [] } -- default Neuron
+makeNeuron i s w = Neuron i s w 0 [] -- create Neuron with the three parameter (inputSum, state and weights)
+setDelta n d = Neuron (inputSum n) (state n) (weights n) d (deltaWeights n) -- alternative delta setter
+setDeltaWeights n dw = Neuron (inputSum n) (state n) (weights n) (delta n) dw -- alternative weight setter
+setWeights n w = Neuron (inputSum n) (state n) (w) (delta n) (deltaWeights n) -- alternative weight setter
+
+-- sigmoid function
+sigmoidFunction :: (Floating a) => a -> a
+sigmoidFunction x = 1 / (1 + (exp (-x)))
+
+
