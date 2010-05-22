@@ -113,6 +113,44 @@ tdata = Trainingdata 8 inputValues outputValues
 -- HERE IT IS - The result from the generic backpropagation algorithm
 trainedNet = genericTraining network tdata 0
 
+timeTest = demo network 5000
 
+-- forward the net (input values have to be set before) 
+-- and show the state of the neuron(s) of the output layer
+forwardAndShowResult net = result where
+	forwarded = forwardPass net []
+	result = makeStateListOfLayer (last forwarded) []
+
+-- let train the net <steps> times
+-- exmaple use case:
+-- load Main in ghci and do type this into the interpreter
+{--
+	let goodNet = demo network 5000
+	goodNet -- take a whlie
+	-- define some networks with different inputLayer
+	let i_100 = setTrainToInputLayer goodNet [1,0,0]
+	let i_010 = setTrainToInputLayer goodNet [0,1,0]
+	let i_001 = setTrainToInputLayer goodNet [0,0,1]
+	let i_000 = setTrainToInputLayer goodNet [0,0,0]
+	let i_110 = setTrainToInputLayer goodNet [1,1,0]
+	let i_011 = setTrainToInputLayer goodNet [0,1,1]
+	let i_101 = setTrainToInputLayer goodNet [1,0,1]
+	let i_111 = setTrainToInputLayer goodNet [1,1,1]
+	
+	forwardAndShowResult i_010
+	forwardAndShowResult i_111
+	...
+	
+	-- WARNING
+	-- currently the network will no train perfectly
+	-- the topology configuration isn't usefull for the logic purpose
+	-- other reason is, that the network has no bias, this will be implemented in future
+	
+--}
+-- the function / algorithm is very slow :(
+-- 5000 steps ~ 16 seconds (on a macbook 2GHz)
+demo net 0 = net
+demo net steps = demo trained (steps-1) where
+	trained = genericTraining net tdata 0
 	
 	
