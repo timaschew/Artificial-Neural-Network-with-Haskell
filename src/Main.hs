@@ -51,7 +51,6 @@ http://github.com/timaschew/Artificial-Neural-Network-with-Haskell/issues
 
 - use foldl instead of recursivly list operations
 - reduce function calls with long parameters (use temp calculations)
-- fix forwardPass function (call updated nextLayer in recurision) and fix infinite loop
 - add backwardPass function: inside it call steps: 3a, 3b, 3c
 - add step 3c functions
 - error handling using network with layer length <3 
@@ -73,9 +72,9 @@ import Neuron
 main::IO()
 main = do
 	
-	printState $ concat calcedNetwork
+	printState $ concat forwardedNetwork
 	putStr $ "output: "
-	printState $ concat [calcedOutput]
+	printState $ concat [last forwardedNetwork]
 	
 	
 printState :: [Neuron] -> IO()
@@ -84,7 +83,7 @@ printState neuronList = do
 	let result = zipWith (\state i ->  "n[" ++ show i ++ "].state = " ++ show state) stateList [1..]
 	putStr $ unlines result
 
-printNet :: [[Neuron]] -> IO()
+printNet :: Network -> IO()
 printNet network = do
 	let neuronList = concat network
 	let result = zipWith (\neuron i ->  "n[" ++ show i ++ "] : " ++ show neuron) neuronList [1..]
@@ -119,22 +118,18 @@ hiddenLayers = tail (init network)
 hiddenLayer1 = hiddenLayers !! 0
 outputLayer = last network
 
-calcedHiddenLayer :: [Neuron]
-calcedHiddenLayer = calcLayer inputLayer hiddenLayer1 []
-
-calcedOutput :: [Neuron]
-calcedOutput = calcLayer calcedHiddenLayer outputLayer []
-
-calcedNetwork = [inputLayer, calcedHiddenLayer, calcedOutput]
+forwardedNetwork = [inputLayer] ++ forwardPass network []
 
 --
 -- STARTING calculate Error and Backward Pass (currently: manuel for single layers)
 --
 -- expected values: input: (1,0,0) / output: 10
 expectedValue = 10
+calcedOutput = last forwardedNetwork
 deltaOutputNeuron = calcError calcedOutput expectedValue
 
 -- start step 3a
+calcedHiddenLayer = forwardedNetwork !! 1
 backpropagation_step3a = calcLayerDeltaWeigts calcedHiddenLayer [deltaOutputNeuron] []
 
 -- start step 3b
@@ -147,23 +142,25 @@ backpropagation_step3b = updateLayerWeights backpropagation_step3a []
 --
 -- use this method to do the 1. algo step. Example: printNet forwardPass network [[]] 
 -- @params: currentNet newNet
--- @return new network
-forwardPass :: [[Neuron]] -> [[Neuron]] -> [[Neuron]]
-forwardPass [] newNet = newNet
-forwardPass (l:ls) newNet =  forwardPass ls (newNet ++ [calcLayer l nextLayer []])
-	where 
-	nextLayer | length ls == 0 = []
-			  | otherwise = (head ls)
+-- @return new network without the input layer (input layer dont have to be calculated)
+forwardPass :: Network -> Network -> Network
+forwardPass [last] c = c
+forwardPass (l:ls) c =  forwardPass updatedLs tmp where 
+	nextLayer 	| length ls == 0 = []
+			| otherwise = (head ls)
+	updatedNextLayer = calcLayer l nextLayer []
+	updatedLs = [updatedNextLayer] ++ (drop 1 ls)
+	tmp = c ++ [updatedNextLayer]
 
 -- dynamic calculating from leftLayer to rightLayer
 -- recursion: call calcLayer with leftLayer an rs and calcedFirstNeuron
 -- calcedFirstNeuron: previousNeuronList (c) ++ current Neuron (calculated with Neuron constructor) as List
 calcLayer :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
 calcLayer ll [] c = c
-calcLayer ll (r:rl) c = calcLayer ll (rl) tmp where 
-	v_inputSum = calcNeuron ll (weights r) 0
-	v_state = sigmoidFunction (calcNeuron ll (weights r) 0)
-	updatedNeuron = makeNeuron v_inputSum v_state (weights r)
+calcLayer ll (n:rl) c = calcLayer ll (rl) tmp where 
+	v_inputSum = calcNeuron ll (weights n) 0
+	v_state = sigmoidFunction (calcNeuron ll (weights n) 0)
+	updatedNeuron = makeNeuron v_inputSum v_state (weights n)
 	tmp = c ++ [updatedNeuron]
 
 -- calculate state * weight + offset
