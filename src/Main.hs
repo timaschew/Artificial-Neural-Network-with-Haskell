@@ -178,11 +178,10 @@ setTrainToInputLayer net train = updatedNet where
 -- @return new network without the input layer (input layer dont have to be calculated)
 forwardPass :: Network -> Network -> Network
 forwardPass [last] c = c
-forwardPass (l:ls) c =  forwardPass updatedLs tmp where 
-	nextLayer 	| length ls == 0 = []
-			| otherwise = (head ls)
+forwardPass (l:net) c =  forwardPass updatedLs tmp where 
+	nextLayer = head net
 	updatedNextLayer = calcLayer l nextLayer []
-	updatedLs = [updatedNextLayer] ++ (drop 1 ls)
+	updatedLs = [updatedNextLayer] ++ (drop 1 net)
 	tmp = c ++ [updatedNextLayer]
 
 -- preparing stuff for backPassSteps
@@ -198,15 +197,14 @@ backwardPass net train = trainedNet where
 	reversedTrainedNet = backPassSteps reversedNet []
 	trainedNet = reverse reversedTrainedNet
 
--- do steps 3a, 3b, 3c reversed way
+-- do steps 3a, 3b, 3c, network is used reversed
 -- stop at input layer, no calculation needed to this layer
 backPassSteps :: Network -> Network -> Network
 backPassSteps [lastLayer] c = c ++ [lastLayer] -- this is the input layer
 backPassSteps (l:net) c = backPassSteps updatedNet tmp where 
 	-- first element of ls (layer list) is the output layer (real last layer)
 	-- because net was reverse in backwardPass
-	prevLayer 	| length net == 0 = []
-			| otherwise = (head net)
+	prevLayer = (head net)
 	new_l = calcLayerDeltaWeigts prevLayer l [] 		-- step 3a
 	newest_l = updateLayerWeights new_l []			-- step 3b
 	new_prevLayer = calcLayerDelta prevLayer newest_l [] 0	-- step 3c
