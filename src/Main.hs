@@ -49,8 +49,9 @@ TODO:
 for difficult / complex things use Issues on Github
 http://github.com/timaschew/Artificial-Neural-Network-with-Haskell/issues
 
+- finish setTrainToInputLayer function
+- test genericTraining function
 - use foldl instead of recursivly list operations
-- add backwardPass function: inside it call steps: 3a, 3b, 3c
 - error handling using network with layer length <3 
 - use Haddock: http://www.haskell.org/haddock/
 - interface between trainingdata file/parser and function calcError
@@ -66,6 +67,7 @@ QUESTIONs:
 
 module Main where
 import Neuron
+import Trainingdata
 
 main::IO()
 main = do
@@ -146,8 +148,31 @@ backpropagation_step3b = updateLayerWeights backpropagation_step3a []
 backpropagation_step3c = calcLayerDelta calcedHiddenLayer backpropagation_step3b [] 0
 
 --
--- FORWARD PASS (step 1)
+-- GENERIC Algorithm,
 --
+-- do forwardPass with TrainData then backwardPass with TrainData
+genericTraining :: Network -> Trainingdata -> Int -> Network
+genericTraining net t 0 = net -- stop here
+genericTraining net t i = genericTraining trainedNet t loop where
+	inputTraining = (input t) !! i
+	outputTraining = (output t) !! i
+	
+	readyNet = setTrainToInputLayer net inputTraining
+	forwarded = forwardPass readyNet []
+	trainedNet = backwardPass forwarded outputTraining
+	loop	| i == (learnSteps t) = 0
+		| otherwise = (i+1)
+		
+-- update the states of the neuron in the input layer from TrainData values
+setTrainToInputLayer :: Network -> TrainData -> Network
+setTrainToInputLayer net train = updatedNet where
+	inputLayer = head net
+	-- TODO here, update states of neurons in the input layer with
+	-- values from the TrainData
+	updatedInputLayer = inputLayer 
+	updatedNet = [updatedInputLayer] ++ (drop 1 net)
+
+
 -- use this method to do the 1. algo step. Example: printNet forwardPass network [[]] 
 -- @params: currentNet newNet
 -- @return new network without the input layer (input layer dont have to be calculated)
@@ -160,6 +185,38 @@ forwardPass (l:ls) c =  forwardPass updatedLs tmp where
 	updatedLs = [updatedNextLayer] ++ (drop 1 ls)
 	tmp = c ++ [updatedNextLayer]
 
+-- preparing stuff for backPassSteps
+-- calculate error (delta of output layer)
+-- reverse net and call backPassSteps
+backwardPass :: Network -> TrainData -> Network
+backwardPass net train = trainedNet where
+	outputlayer = last net
+	-- step 2
+	calcedErrorLayer = calcLayerError outputlayer train [] -- calc output error
+	updatedNet = (init net) ++ [calcedErrorLayer] -- updating output layer
+	reversedNet = reverse updatedNet --
+	reversedTrainedNet = backPassSteps reversedNet []
+	trainedNet = reverse reversedTrainedNet
+
+-- do steps 3a, 3b, 3c reversed way
+-- stop at input layer, no calculation needed to this layer
+backPassSteps :: Network -> Network -> Network
+backPassSteps [lastLayer] c = c ++ [lastLayer] -- this is the input layer
+backPassSteps (l:net) c = backPassSteps updatedNet tmp where 
+	-- first element of ls (layer list) is the output layer (real last layer)
+	-- because net was reverse in backwardPass
+	prevLayer 	| length net == 0 = []
+			| otherwise = (head net)
+	new_l = calcLayerDeltaWeigts prevLayer l [] 		-- step 3a
+	newest_l = updateLayerWeights new_l []			-- step 3b
+	new_prevLayer = calcLayerDelta prevLayer newest_l [] 0	-- step 3c
+
+	updatedNet = [newest_l,new_prevLayer] ++ (drop 2 net)
+	tmp = c ++ [newest_l]
+	
+--
+-- FORWARD PASS (step 1)
+--
 -- dynamic calculating from leftLayer to rightLayer
 -- recursion: call calcLayer with leftLayer an rs and calcedFirstNeuron
 -- calcedFirstNeuron: previousNeuronList (c) ++ current Neuron (calculated with Neuron constructor) as List
