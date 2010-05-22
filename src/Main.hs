@@ -16,10 +16,10 @@ repeat step 3 <learn steps> times
 ############################################
 ## variable names convention in functions ##
 ############################################
-l/layer = layer (list of neurons)
+l = layer (list of neurons)
 ll = left layer
 rl = right layer
-n = neuron (or rn = right neuron, ln = left neuron)
+n = neuron (or rn = neuron of right layer, ln = neuron of left layer)
 c = result from previous recursion
 ws = list of weights
 dws = list of delta weights
@@ -41,7 +41,7 @@ How-To-Read
 			{ calcDeltaWeight = calculate formula for neuron N1 }}
 3b	  updateLayerWeights = update weights of a layer X
 	  	{ updateNeuronWeights = update weights of one neuron of layer X}
-3c	  calcLayerDelta = calculate delta / error for layer X (like step 2)
+3c	  calcLayerDelta = calculate delta / error for layer X (like step 2, but only for hidden layer)
 	  	{ calcNeuronDelta = calculate delta / error for one neuron of layer X }}
 
 TODO:
@@ -50,9 +50,7 @@ for difficult / complex things use Issues on Github
 http://github.com/timaschew/Artificial-Neural-Network-with-Haskell/issues
 
 - use foldl instead of recursivly list operations
-- reduce function calls with long parameters (use temp calculations)
 - add backwardPass function: inside it call steps: 3a, 3b, 3c
-- add step 3c functions
 - error handling using network with layer length <3 
 - use Haddock: http://www.haskell.org/haddock/
 - interface between trainingdata file/parser and function calcError
@@ -121,21 +119,31 @@ outputLayer = last network
 forwardedNetwork = [inputLayer] ++ forwardPass network []
 
 --
--- STARTING calculate Error and Backward Pass (currently: manuel for single layers)
+-- STARTING calculate Error and Backward Pass
 --
 -- expected values: input: (1,0,0) / output: 10
+-- define expected values manuely
 expectedValue = 10
 calcedOutput = last forwardedNetwork
-deltaOutputNeuron = calcError calcedOutput expectedValue
+calcedErrorOutputLayer = calcLayerError calcedOutput [expectedValue] []
+
+-- updating forwardedNetwork
+calcedErrorNetwork = (init forwardedNetwork) ++ [calcedErrorOutputLayer]
+
+-- here: call backwardPass calcedErrorNetwork
 
 -- start step 3a
+-- manuel way
 calcedHiddenLayer = forwardedNetwork !! 1
-backpropagation_step3a = calcLayerDeltaWeigts calcedHiddenLayer [deltaOutputNeuron] []
+backpropagation_step3a = calcLayerDeltaWeigts calcedHiddenLayer calcedErrorOutputLayer []
 
 -- start step 3b
+-- manuel way
 backpropagation_step3b = updateLayerWeights backpropagation_step3a []
 
-
+-- start step 3b
+-- manuel way
+backpropagation_step3c = calcLayerDelta calcedHiddenLayer backpropagation_step3b [] 0
 
 --
 -- FORWARD PASS (step 1)
@@ -181,9 +189,16 @@ calcNeuron (s:states) (w:weights) c = calcNeuron (states) (weights) tmp where
 --
 -- CALCULATE ERROR (step 2)
 --
--- calc delta for only the one and first neuron of calced outputLayer
-calcError outputLayer expected = setDelta (n) delta where
-	n = outputLayer !! 0 -- only first neuron
+-- calculate error (delta) from output layer
+calcLayerError :: [Neuron] -> [Double] -> [Neuron] -> [Neuron]
+calcLayerError [] [] c = c
+calcLayerError (n:layer) (e:el) c = calcLayerError layer el tmp where
+	updatedNeuron = calcError n e
+	tmp = c ++ [updatedNeuron] 
+
+-- calc error (delta) for one neuron of the output layer
+calcError :: Neuron -> Double -> Neuron
+calcError n expected = setDelta (n) delta where
 	s = (state n)
 	delta = (expected - s) * s * (1 - s)
 
@@ -242,3 +257,30 @@ updateNeuronWeights :: Neuron -> [Double] -> [Double] -> Neuron
 updateNeuronWeights neuron w deltaW = updatedNeuron where
 	newWeights = zipWith (+) w deltaW
 	updatedNeuron = setWeights neuron newWeights
+	
+	
+--
+-- BACKWARD PASS (step 3c)
+--
+-- sum up the delta * weight_i of a neuron
+getDeltaStateSumForWeight :: Int -> [Neuron] -> Double -> Double
+getDeltaStateSumForWeight i [] c = c
+getDeltaStateSumForWeight i (n:rl) c = getDeltaStateSumForWeight i rl tmp where
+	deltaStateOfNeuron = (delta n) * ((weights n) !! i)
+	tmp = c + deltaStateOfNeuron
+
+-- calculate the delta for a layer (not for output layer)
+calcLayerDelta :: [Neuron] -> [Neuron] -> [Neuron] -> Int -> [Neuron]
+calcLayerDelta [] rl c i = c
+calcLayerDelta (n:ll) rl c i = calcLayerDelta ll rl tmp (i+1) where
+	updatedNeuron = calcNeuronDelta n rl i
+	tmp = c ++ [updatedNeuron]
+
+-- calcuate the delta for a neuron of a layer (not from the output layer)
+calcNeuronDelta	:: Neuron -> [Neuron] -> Int -> Neuron
+calcNeuronDelta ln rl i = updatedNeuron where
+	deltaStateSumOfNextLayer = getDeltaStateSumForWeight i rl 0
+	formula = (state ln) * (1 - (state ln)) * deltaStateSumOfNextLayer
+	updatedNeuron = setDelta ln formula
+	
+	

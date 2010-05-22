@@ -20,8 +20,8 @@
 
 ...
 
-# alternative: write configuration in pure haskel and load the file, using network configuration like now (Main.hs):
--- Topology and Neuron Configuration
+# alternative: write configuration in pure haskell and load the file, using network configuration like now (Main.hs):
+-- topology and network Configuration
 -- input
 n1_1 = defaultNeuron {state = 1}
 n1_2 = defaultNeuron
