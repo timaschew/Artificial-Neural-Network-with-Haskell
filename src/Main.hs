@@ -49,17 +49,17 @@ printNet network = do
 -- #################################
 -- Topology and Neuron Configuration
 -- input
+b1_0 = biasNeuron 
 n1_1 = defaultNeuron
 n1_2 = defaultNeuron
-n1_3 = defaultNeuron
 -- hidden
-n2_1 = defaultNeuron { weights = [0.678, 0.211, -0.761] }
-n2_2 = defaultNeuron { weights = [0.033, -0.429, -0.938] }
-n2_3 = defaultNeuron { weights = [0.763, -0.904, -0.330] }
+b2_0 = biasNeuron { weights = [0,0,0] }
+n2_1 = defaultNeuron { weights = [0.033, -0.429, -0.938] }
+n2_2 = defaultNeuron { weights = [0.763, -0.904, -0.330] }
 -- output
 n3_1 = defaultNeuron { weights = [0.632, 0.952, 0.742] }
 
-network = [[n1_1, n1_2, n1_3], [n2_1, n2_2, n2_3], [n3_1]]
+network = [[b1_0, n1_1, n1_2], [b2_0, n2_1, n2_2], [n3_1]]
 -- #################################
 
 --
@@ -106,9 +106,9 @@ backpropagation_step3c = calcLayerDelta calcedHiddenLayer backpropagation_step3b
 --
 
 -- XOR trainingdata
-inputValues = [[1,0,0],[0,1,0],[0,0,1],[0,0,0],[1,1,0], [0,1,1], [1,0,1], [1,1,1]]
-outputValues = [[1],[1],[1],[0],[0],[0],[0],[1]]
-tdata = Trainingdata 8 inputValues outputValues
+inputValues = [[0,0],[0,1],[1,0],[1,1]]
+outputValues = [[0],[1],[1],[0]]
+tdata = Trainingdata 4 inputValues outputValues
 
 -- HERE IT IS - The result from the generic backpropagation algorithm
 trainedNet = genericTraining network tdata 0
@@ -128,27 +128,18 @@ forwardAndShowResult net = result where
 	let goodNet = demo network 5000
 	goodNet -- take a whlie
 	-- define some networks with different inputLayer
-	let i_100 = setTrainToInputLayer goodNet [1,0,0]
-	let i_010 = setTrainToInputLayer goodNet [0,1,0]
-	let i_001 = setTrainToInputLayer goodNet [0,0,1]
-	let i_000 = setTrainToInputLayer goodNet [0,0,0]
-	let i_110 = setTrainToInputLayer goodNet [1,1,0]
-	let i_011 = setTrainToInputLayer goodNet [0,1,1]
-	let i_101 = setTrainToInputLayer goodNet [1,0,1]
-	let i_111 = setTrainToInputLayer goodNet [1,1,1]
-	
-	forwardAndShowResult i_010
-	forwardAndShowResult i_111
+	let i_00 = setTrainToInputLayer goodNet [0,0]
+	let i_01 = setTrainToInputLayer goodNet [0,1]
+	let i_10 = setTrainToInputLayer goodNet [1,0]
+	let i_11 = setTrainToInputLayer goodNet [1,1]
+
+	forwardAndShowResult i_01
+	forwardAndShowResult i_11
 	...
-	
-	-- WARNING
-	-- currently the network will no train perfectly
-	-- the topology configuration isn't usefull for the logic purpose
-	-- other reason is, that the network has no bias, this will be implemented in future
 	
 --}
 -- the function / algorithm is very slow :(
--- 5000 steps ~ 16 seconds (on a macbook 2GHz)
+-- 5000 * 4 steps ~ 16 seconds (on a macbook 2GHz)
 demo net 0 = net
 demo net steps = demo trained (steps-1) where
 	trained = genericTraining net tdata 0

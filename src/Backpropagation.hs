@@ -73,11 +73,12 @@ genericTraining net t i = genericTraining trainedNet t loop where
 -- update the states of the neuron in the input layer from TrainData values
 setTrainToInputLayer :: Network -> TrainData -> Network
 setTrainToInputLayer net train = updatedNet where
-	inputLayer = head net
-	-- TODO here, update states of neurons in the input layer with
-	-- values from the TrainData
-	updatedInputLayer = setTrainToNeuron inputLayer train []
-	updatedNet = [updatedInputLayer] ++ (drop 1 net)
+	inputLayer = head net -- get intput layer
+	withoutBias = tail inputLayer -- no bias
+	updatedInputLayer = setTrainToNeuron withoutBias train []
+	updatedWithBias = [head inputLayer] ++ updatedInputLayer
+	-- use old net but update updateInputLayer (drop and append updated)
+	updatedNet = [updatedWithBias] ++ (drop 1 net)
 
 setTrainToNeuron :: [Neuron] -> TrainData -> [Neuron] -> [Neuron]
 setTrainToNeuron [] [] c = c 
@@ -137,7 +138,7 @@ calcLayer ll [] c = c
 calcLayer ll (n:rl) c = calcLayer ll (rl) tmp where 
 	v_inputSum = calcNeuron ll (weights n) 0
 	v_state = sigmoidFunction (calcNeuron ll (weights n) 0)
-	updatedNeuron = makeNeuron v_inputSum v_state (weights n)
+	updatedNeuron = updateNeuron n v_inputSum v_state (weights n)
 	tmp = c ++ [updatedNeuron]
 
 -- calculate state * weight + offset
