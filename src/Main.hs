@@ -110,38 +110,29 @@ inputValues = [[0,0],[0,1],[1,0],[1,1]]
 outputValues = [[0],[1],[1],[0]]
 tdata = Trainingdata 4 inputValues outputValues
 
--- HERE IT IS - The result from the generic backpropagation algorithm
+-- HERE IT IS - The result from the generic backpropagation algorithm (only 4 learnsteps)
 trainedNet = genericTraining network tdata 0
 
-timeTest = demo network 5000
+goodNet = trainNet network 5000 -- (5000 * 4 learnsteps)
 
--- forward the net (input values have to be set before) 
--- and show the state of the neuron(s) of the output layer
-forwardAndShowResult net = result where
-	forwarded = forwardPass net []
+-- set input layer with the given TrainData and call forwardPass
+-- show only state of the neuron(s) of output layer
+-- exmaple use case:
+-- 1 start GHCi
+-- 2 call 'goodNet' and wait - calculates the network
+-- 3 call 'demo goodNet [1,0]' for showing result for the given input
+demo :: Network -> TrainData -> [Double]
+demo net inputData = result where
+	inputted = setTrainToInputLayer net inputData
+	forwarded = forwardPass inputted []
 	result = makeStateListOfLayer (last forwarded) []
 
 -- let train the net <steps> times
--- exmaple use case:
--- load Main in ghci and do type this into the interpreter
-{--
-	let goodNet = demo network 5000
-	goodNet -- take a whlie
-	-- define some networks with different inputLayer
-	let i_00 = setTrainToInputLayer goodNet [0,0]
-	let i_01 = setTrainToInputLayer goodNet [0,1]
-	let i_10 = setTrainToInputLayer goodNet [1,0]
-	let i_11 = setTrainToInputLayer goodNet [1,1]
-
-	forwardAndShowResult i_01
-	forwardAndShowResult i_11
-	...
-	
---}
 -- the function / algorithm is very slow :(
 -- 5000 * 4 steps ~ 16 seconds (on a macbook 2GHz)
-demo net 0 = net
-demo net steps = demo trained (steps-1) where
+trainNet :: Network -> Int -> Network
+trainNet net 0 = net
+trainNet net steps = trainNet trained (steps-1) where
 	trained = genericTraining net tdata 0
 	
 	
