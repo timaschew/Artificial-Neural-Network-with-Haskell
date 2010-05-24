@@ -24,7 +24,8 @@ module Main where
 import Neuron
 import Trainingdata
 import Backpropagation
-
+import Control.Monad
+import Text.Printf
 
 main::IO()
 main = do
@@ -46,6 +47,86 @@ printNet network = do
 	let neuronList = concat network
 	let result = zipWith (\neuron i ->  "n[" ++ show i ++ "] : " ++ show neuron) neuronList [1..]
 	putStr $ unlines result
+
+
+--
+-- pretty print method
+--
+prettyPrint :: Network -> IO()
+prettyPrint network = do
+	mapM_ putStr (buildPrettyStr network)
+
+
+buildPrettyStr :: Network -> [String]
+buildPrettyStr net = result
+	where
+	list = buildLayerStr 1 net []
+	max = getMaxLayerSize list 0
+	result = concateAllNeuron max list []
+
+
+-- returns: 
+buildLayerStr :: Int -> Network -> [[String]] -> [[String]]
+buildLayerStr curIndex [] res = res
+buildLayerStr curIndex (l:layerList) res = buildLayerStr nextIndex layerList tmp
+	where
+	nextIndex = curIndex + 1
+	tmp = res ++ [(buildNeuronStr curIndex 1 l [] [])]
+
+
+buildNeuronStr :: Int -> Int -> [Neuron] -> [String] -> [String] -> [String]
+buildNeuronStr i j [] r1 r2 = r1 ++ ["\n"] ++ r2 ++ ["\n"]
+buildNeuronStr layerIdx neuronIdx (n:nList) r1 r2 = buildNeuronStr layerIdx nextIdx nList tmp1 tmp2
+	where
+	nextIdx = neuronIdx + 1
+	neuronStr = printf "N[%d][%d]" (layerIdx::Int) (neuronIdx::Int)
+	stateStr = printf "%f" ((state n) :: Double)
+	tmp1 = r1 ++ [neuronStr]
+	tmp2 = r2 ++ [stateStr]
+
+
+getMaxLayerSize :: [[String]] -> Int -> Int
+getMaxLayerSize [] max = max
+getMaxLayerSize (curList:listOfList) max = getMaxLayerSize listOfList curMax
+	where
+	curMax | length curList > max = length curList
+		   | otherwise = max
+
+
+concateAllNeuron :: Int -> [[String]] -> [String] -> [String]
+concateAllNeuron max [] res = res
+concateAllNeuron max (l:lists) res = concateAllNeuron max restList tmp
+	where
+	restList | length lists > 0 = tail lists
+			 | otherwise = []
+	headList | length lists > 0 = head lists
+			 | otherwise = []
+	tmp = res ++ (concateNeuronStr max l headList)
+
+
+concateNeuronStr :: Int -> [String] -> [String] -> [String]
+concateNeuronStr maxNeurons nStrList sStrList = result
+	where
+	-- needed for calcinc the spaceL if this layer has less neurons
+	maxDiff = maxNeurons - length nStrList
+	-- spacer for the first neuron on the left side
+	spacerL =  buildSpacer (0 + maxDiff * 5)
+	
+	-- spacer between 2 neurons
+	spacerN = buildSpacer 5
+	-- needet for extra spaces if state line below is shorter. 2nd map: length of neuron string 
+	spacerS = zipWith (\n str -> buildSpacer (n - length str)) (map (\n -> length n) nStrList) sStrList
+			
+	-- row1: neurons, row2: states of neurons
+	row1 = spacerL ++ concat (map (\n -> n ++ spacerN) nStrList) ++ "\n"
+	row2 = spacerL ++ concat (zipWith (\sp n -> n ++ spacerN ++ sp) spacerS sStrList) ++ "\n"
+	--row3 = spacerL ++ (zipWith (\sp str -> str ++ spacerN ++ concat (replicate (sp - length str) " ")) spacerS sStrList) ++ "\n"
+	result = [row1, row2]
+
+buildSpacer :: Int -> String
+buildSpacer size = concat (replicate size " ")
+
+
 
 -- #################################
 -- Topology and Neuron Configuration
