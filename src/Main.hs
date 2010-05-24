@@ -29,9 +29,10 @@ import Backpropagation
 main::IO()
 main = do
 	
-	printState $ concat forwardedNetwork
-	putStr $ "output: "
-	printState $ concat [last forwardedNetwork]
+	--printState $ concat forwardedNetwork
+	--putStr $ "output: "
+	--printState $ concat [last forwardedNetwork]
+	print goodNet
 	
 	
 printState :: [Neuron] -> IO()
@@ -113,7 +114,7 @@ tdata = Trainingdata 4 inputValues outputValues
 -- HERE IT IS - The result from the generic backpropagation algorithm (only 4 learnsteps)
 trainedNet = genericTraining network tdata 0
 
-goodNet = trainNet network 5000 -- (5000 * 4 learnsteps)
+goodNet = trainNet network 8000 -- (5000 * 4 learnsteps)
 
 -- set input layer with the given TrainData and call forwardPass
 -- show only state of the neuron(s) of output layer
@@ -131,7 +132,7 @@ demo net inputData = result where
 -- the function / algorithm is very slow :(
 -- 5000 * 4 steps ~ 16 seconds (on a macbook 2GHz)
 trainNet :: Network -> Int -> Network
-trainNet net 0 = net
+trainNet net 0 = {-# SCC "trainNet" #-} net
 trainNet net steps = trainNet trained (steps-1) where
 	trained = genericTraining net tdata 0
 	
