@@ -44,6 +44,11 @@ How-To-Read
 3c	  calcLayerDelta = calculate delta / error for layer X (like step 2, but only for hidden layer)
 	  	{ calcNeuronDelta = calculate delta / error for one neuron of layer X }}
 	 }
+	 
+genericTraining = do all this steps (1-3c)
+
+setTrainToInputLayer = set state of input layer neurons, for training or working phase
+
 --}
 
 module Backpropagation where
@@ -83,6 +88,7 @@ setTrainToInputLayer net train = updatedNet where
 	-- use old net but update readyLayer (drop and append updated)
 	updatedNet = [readyLayer] ++ (drop 1 net)
 
+-- update the state of one neuron recursivly
 setTrainToNeuron :: [Neuron] -> TrainData -> [Neuron] -> [Neuron]
 setTrainToNeuron [] [] c = c 
 setTrainToNeuron (n:layer) (t:train) c = setTrainToNeuron layer train tmp where
