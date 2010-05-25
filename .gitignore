@@ -1,0 +1,11 @@
+src/Backpropagation.hi
+src/Backpropagation.o
+src/Main
+src/Main.hi
+src/Main.o
+src/Main.prof
+src/Neuron.hi
+src/Neuron.o
+src/Trainingdata.hi
+src/Trainingdata.o
+

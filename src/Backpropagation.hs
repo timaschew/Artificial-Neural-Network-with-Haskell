@@ -74,11 +74,14 @@ genericTraining net t i = genericTraining trainedNet t loop where
 setTrainToInputLayer :: Network -> TrainData -> Network
 setTrainToInputLayer net train = updatedNet where
 	inputLayer = head net -- get intput layer
-	withoutBias = tail inputLayer -- no bias
-	updatedInputLayer = setTrainToNeuron withoutBias train []
-	updatedWithBias = [head inputLayer] ++ updatedInputLayer
-	-- use old net but update updateInputLayer (drop and append updated)
-	updatedNet = [updatedWithBias] ++ (drop 1 net)
+	 -- skip first neuron, becaus its a bias
+	inputNeurons	| ((bias (head inputLayer)) == True) = tail inputLayer
+			| otherwise = inputLayer -- no bias use whole layer
+	updatedInputLayer = setTrainToNeuron inputNeurons train []
+	readyLayer | ((bias (head inputLayer)) == True) = [head inputLayer] ++ updatedInputLayer
+			| otherwise = updatedInputLayer
+	-- use old net but update readyLayer (drop and append updated)
+	updatedNet = [readyLayer] ++ (drop 1 net)
 
 setTrainToNeuron :: [Neuron] -> TrainData -> [Neuron] -> [Neuron]
 setTrainToNeuron [] [] c = c 
