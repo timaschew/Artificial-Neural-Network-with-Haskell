@@ -70,11 +70,11 @@ buildLayerStr curIndex [] res = res
 buildLayerStr curIndex (l:layerList) res = buildLayerStr nextIndex layerList tmp
 	where
 	nextIndex = curIndex + 1
-	tmp = res ++ [(buildNeuronStr curIndex 1 l [] [])]
+	tmp = res ++ (buildNeuronStr curIndex 1 l [] [])
 
 
-buildNeuronStr :: Int -> Int -> [Neuron] -> [String] -> [String] -> [String]
-buildNeuronStr i j [] r1 r2 = r1 ++ ["\n"] ++ r2 ++ ["\n"]
+buildNeuronStr :: Int -> Int -> [Neuron] -> [String] -> [String] -> [[String]]
+buildNeuronStr i j [] r1 r2 = [r1] ++ [r2]
 buildNeuronStr layerIdx neuronIdx (n:nList) r1 r2 = buildNeuronStr layerIdx nextIdx nList tmp1 tmp2
 	where
 	nextIdx = neuronIdx + 1
@@ -102,25 +102,31 @@ concateAllNeuron max (l:lists) res = concateAllNeuron max restList tmp
 			 | otherwise = []
 	tmp = res ++ (concateNeuronStr max l headList)
 
-
 concateNeuronStr :: Int -> [String] -> [String] -> [String]
 concateNeuronStr maxNeurons nStrList sStrList = result
 	where
 	-- needed for calcinc the spaceL if this layer has less neurons
 	maxDiff = maxNeurons - length nStrList
+	
+	maxDiffHalf | (maxDiff `mod` 2) == 0 = (maxDiff `div` 2)
+				| otherwise = (maxDiff + 1) `div` 2
+	
 	-- spacer for the first neuron on the left side
-	spacerL =  buildSpacer (0 + maxDiff * 5)
+	spacerL | maxDiff == 1 = buildSpacer 7
+			| maxDiff > 0 && maxDiff `mod` 2 == 0 = buildSpacer (maxDiffHalf * 12)
+			| maxDiff > 0 && maxDiff `mod` 2 == 1 = buildSpacer (maxDiffHalf * 9)
+			| otherwise = buildSpacer 0
 	
 	-- spacer between 2 neurons
 	spacerN = buildSpacer 5
+	
 	-- needet for extra spaces if state line below is shorter. 2nd map: length of neuron string 
 	spacerS = zipWith (\n str -> buildSpacer (n - length str)) (map (\n -> length n) nStrList) sStrList
 			
 	-- row1: neurons, row2: states of neurons
 	row1 = spacerL ++ concat (map (\n -> n ++ spacerN) nStrList) ++ "\n"
-	row2 = spacerL ++ concat (zipWith (\sp n -> n ++ spacerN ++ sp) spacerS sStrList) ++ "\n"
-	--row3 = spacerL ++ (zipWith (\sp str -> str ++ spacerN ++ concat (replicate (sp - length str) " ")) spacerS sStrList) ++ "\n"
-	result = [row1, row2]
+	row2 = spacerL ++ concat (zipWith (\sp n -> n ++ spacerN ++ sp) spacerS sStrList) ++ "\n\n"
+	result = [(row1 ++ row2)]
 
 buildSpacer :: Int -> String
 buildSpacer size = concat (replicate size " ")
