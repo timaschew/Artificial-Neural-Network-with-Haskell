@@ -71,7 +71,10 @@ buildLayerStr curIndex [] res = res
 buildLayerStr curIndex (l:layerList) res = buildLayerStr nextIndex layerList tmp
 	where
 	nextIndex = curIndex + 1
-	tmp = res ++ (buildNeuronStr curIndex 1 l [] [])
+	-- check if first neuron is a bias or not
+	realNeuronIndex	| (bias (head l)) == True = 0
+			| otherwise = 1
+	tmp = res ++ (buildNeuronStr curIndex realNeuronIndex l [] [])
 
 
 buildNeuronStr :: Int -> Int -> [Neuron] -> [String] -> [String] -> [[String]]
