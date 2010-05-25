@@ -49,6 +49,47 @@ printNet network = do
 	putStr $ unlines result
 
 
+--  print pretty
+printPretty net = bla where
+	blub = prettyP net 1 []
+	bla = putStrLn (unlines blub)
+	
+prettyP :: Network -> Int -> [String] -> [String]
+prettyP [] row c = c
+prettyP (l:net) row c = prettyP net (row+1) tmp where
+	neurons = printNeuronLayers l row 1 []
+	states = printStateLayers l ""
+	tmp = c ++ [neurons] ++ [states] ++ [""]
+
+-- Neuron Index	
+printNeuronLayers :: [Neuron] -> Int -> Int -> String -> String
+printNeuronLayers [] row col c = c
+printNeuronLayers (n:l) row col c =  printNeuronLayers l row (col+1) tmp where
+	updated = printNeuron n row col
+	tmp = c ++ updated
+
+printNeuron :: Neuron -> Int -> Int -> String
+printNeuron n row col = printed  where
+	i	| (bias n) == True = 0
+		| otherwise = col
+	printed1l = printf "N[%d][%d]     " (row::Int) (i)
+	printed = printed1l
+
+-- State 
+printStateLayers :: [Neuron] -> String -> String
+printStateLayers []  c = c
+printStateLayers (n:l) c =  printStateLayers l tmp where
+	updated = printNeuronState n
+	tmp = c ++ updated
+	
+printNeuronState :: Neuron -> String
+printNeuronState n = printed  where
+	printed1l = printf "%f         " (state n)
+	printed = printed1l
+	
+-- print pretty END
+
+
 --
 -- pretty print method
 --
@@ -204,7 +245,7 @@ tdata = Trainingdata 4 inputValues outputValues
 -- HERE IT IS - The result from the generic backpropagation algorithm (only 4 learnsteps)
 trainedNet = genericTraining network tdata 0
 
-goodNet = trainNet network 8000 -- (5000 * 4 learnsteps)
+goodNet = trainNet network 10000 -- (5000 * 4 learnsteps)
 
 -- set input layer with the given TrainData and call forwardPass
 -- show only state of the neuron(s) of output layer
