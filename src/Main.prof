@@ -1,0 +1,124 @@
+	Wed May 26 18:20 2010 Time and Allocation Profiling Report  (Final)
+
+	   Main +RTS -hc -p -RTS
+
+	total time  =        0.32 secs   (16 ticks @ 20 ms)
+	total alloc = 286,945,892 bytes  (excludes profiling overheads)
+
+COST CENTRE                    MODULE               %time %alloc
+
+forwardPass                    Backpropagation       31.2   10.8
+updateLayerWeights             Backpropagation       25.0   15.4
+calcDeltaWeight                Backpropagation       12.5    9.0
+makeStateListOfLayer           Backpropagation        6.2    6.5
+getDeltaStateSumForWeight      Backpropagation        6.2    0.7
+genericTraining                Backpropagation        6.2    0.8
+calcLayerDeltaWeigts           Backpropagation        6.2    7.6
+calcLayerDelta                 Backpropagation        6.2   15.9
+sigmoidFunction                Neuron                 0.0    4.2
+setTrainToNeuron               Backpropagation        0.0    4.1
+setTrainToInputLayer           Backpropagation        0.0    1.1
+calcNeuron2                    Backpropagation        0.0   14.7
+calcLayerError                 Backpropagation        0.0    2.0
+backwardPass                   Backpropagation        0.0    3.0
+backPassSteps                  Backpropagation        0.0    3.3
+
+
+                                                                                               individual    inherited
+COST CENTRE              MODULE                                               no.    entries  %time %alloc   %time %alloc
+
+MAIN                     MAIN                                                   1           0   0.0    0.0   100.0  100.0
+ main                    Main                                                 332           1   0.0    0.0     0.0    0.0
+ CAF:lvl67               Main                                                 326           1   0.0    0.0     0.0    0.0
+ CAF:a81                 Main                                                 325           1   0.0    0.0     0.0    0.1
+  showList_arK           Neuron                                               342           3   0.0    0.0     0.0    0.1
+   showsPrec_arz         Neuron                                               356         126   0.0    0.1     0.0    0.1
+ CAF:goodNet             Main                                                 324           1   0.0    0.0   100.0   99.9
+  goodNet                Main                                                 334           1   0.0    0.0   100.0   99.9
+   trainNet              Main                                                 335       10001   0.0    0.0   100.0   99.9
+    genericTraining      Backpropagation                                      336       50000   6.2    0.8   100.0   99.9
+     backwardPass        Backpropagation                                      340       40000   0.0    3.0    62.5   63.6
+      calcLayerError     Backpropagation                                      381       80000   0.0    2.0     0.0    2.0
+      backPassSteps      Backpropagation                                      341      120000   0.0    3.3    62.5   58.6
+       updateLayerWeights Backpropagation                                      373      240000  25.0   15.4    25.0   15.4
+       calcLayerDeltaWeigts Backpropagation                                      371      240000   6.2    7.6    25.0   23.2
+        calcDeltaWeight  Backpropagation                                      379      480000  12.5    9.0    12.5    9.0
+        makeStateListOfLayer Backpropagation                                      378      480000   6.2    6.5     6.2    6.5
+       calcLayerDelta    Backpropagation                                      343      320000   6.2   15.9    12.5   16.6
+        getDeltaStateSumForWeight Backpropagation                                      370      160008   6.2    0.7     6.2    0.7
+     forwardPass         Backpropagation                                      338      120000  31.2   10.8    31.2   30.3
+      sigmoidFunction    Neuron                                               380      119999   0.0    4.2     0.0    4.2
+      calcLayer2         Backpropagation                                      372      200000   0.0    0.7     0.0   15.4
+       calcNeuron2       Backpropagation                                      377      120003   0.0   14.7     0.0   14.7
+     setTrainToInputLayer Backpropagation                                      337      120000   0.0    1.1     0.0    5.2
+      setTrainToNeuron   Backpropagation                                      349      120000   0.0    4.1     0.0    4.1
+ CAF:outputValues        Main                                                 321           1   0.0    0.0     0.0    0.0
+  outputValues           Main                                                 382           2   0.0    0.0     0.0    0.0
+ CAF:lvl62               Main                                                 320           1   0.0    0.0     0.0    0.0
+  outputValues           Main                                                 386           1   0.0    0.0     0.0    0.0
+ CAF:lvl61               Main                                                 319           1   0.0    0.0     0.0    0.0
+  outputValues           Main                                                 387           1   0.0    0.0     0.0    0.0
+ CAF:lvl60               Main                                                 318           1   0.0    0.0     0.0    0.0
+  outputValues           Main                                                 388           1   0.0    0.0     0.0    0.0
+ CAF:inputValues         Main                                                 317           1   0.0    0.0     0.0    0.0
+  inputValues            Main                                                 350           2   0.0    0.0     0.0    0.0
+ CAF:lvl59               Main                                                 316           1   0.0    0.0     0.0    0.0
+  inputValues            Main                                                 353           1   0.0    0.0     0.0    0.0
+ CAF:lvl58               Main                                                 315           1   0.0    0.0     0.0    0.0
+  inputValues            Main                                                 354           1   0.0    0.0     0.0    0.0
+ CAF:lvl57               Main                                                 314           1   0.0    0.0     0.0    0.0
+  inputValues            Main                                                 355           1   0.0    0.0     0.0    0.0
+ CAF:network             Main                                                 313           1   0.0    0.0     0.0    0.0
+  network                Main                                                 339           1   0.0    0.0     0.0    0.0
+ CAF:b2_0                Main                                                 312           1   0.0    0.0     0.0    0.0
+  b2_0                   Main                                                 374           1   0.0    0.0     0.0    0.0
+ CAF:n2_1                Main                                                 311           1   0.0    0.0     0.0    0.0
+  n2_1                   Main                                                 375           1   0.0    0.0     0.0    0.0
+ CAF:n2_2                Main                                                 310           1   0.0    0.0     0.0    0.0
+  n2_2                   Main                                                 385           1   0.0    0.0     0.0    0.0
+ CAF:n3_1                Main                                                 309           1   0.0    0.0     0.0    0.0
+  n3_1                   Main                                                 383           1   0.0    0.0     0.0    0.0
+ CAF:lvl2                Main                                                 305           1   0.0    0.0     0.0    0.0
+  network                Main                                                 344           0   0.0    0.0     0.0    0.0
+   b1_0                  Main                                                 345           1   0.0    0.0     0.0    0.0
+ CAF:lvl1                Main                                                 304           1   0.0    0.0     0.0    0.0
+  network                Main                                                 347           0   0.0    0.0     0.0    0.0
+   n1_1                  Main                                                 348           1   0.0    0.0     0.0    0.0
+ CAF:lvl                 Main                                                 303           1   0.0    0.0     0.0    0.0
+  network                Main                                                 351           0   0.0    0.0     0.0    0.0
+   n1_2                  Main                                                 352           1   0.0    0.0     0.0    0.0
+ CAF                     GHC.Show                                             299           3   0.0    0.0     0.0    0.0
+ CAF                     GHC.Float                                            276           2   0.0    0.0     0.0    0.0
+ CAF                     GHC.Handle                                           254           2   0.0    0.0     0.0    0.0
+ CAF                     GHC.Conc                                             253           1   0.0    0.0     0.0    0.0
+ CAF:sum                 Backpropagation                                      215           1   0.0    0.0     0.0    0.0
+ CAF:sigmoidFunction     Backpropagation                                      214           1   0.0    0.0     0.0    0.0
+  sigmoidFunction        Neuron                                               376           2   0.0    0.0     0.0    0.0
+ CAF:biasNeuron          Neuron                                               204           1   0.0    0.0     0.0    0.0
+  biasNeuron             Neuron                                               346           1   0.0    0.0     0.0    0.0
+ CAF:defaultNeuron       Neuron                                               203           1   0.0    0.0     0.0    0.0
+  defaultNeuron          Neuron                                               369           1   0.0    0.0     0.0    0.0
+ CAF:lvl20_rHW           Neuron                                               202           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               357           0   0.0    0.0     0.0    0.0
+ CAF:lvl19_rHU           Neuron                                               201           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               358           0   0.0    0.0     0.0    0.0
+ CAF:lvl17_rHQ           Neuron                                               200           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               359           0   0.0    0.0     0.0    0.0
+ CAF:lvl16_rHO           Neuron                                               199           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               360           0   0.0    0.0     0.0    0.0
+ CAF:lvl14_rHK           Neuron                                               198           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               361           0   0.0    0.0     0.0    0.0
+ CAF:lvl13_rHI           Neuron                                               197           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               362           0   0.0    0.0     0.0    0.0
+ CAF:lvl12_rHG           Neuron                                               196           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               363           0   0.0    0.0     0.0    0.0
+ CAF:lvl11_rHE           Neuron                                               195           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               364           0   0.0    0.0     0.0    0.0
+ CAF:lvl9_rHA            Neuron                                               194           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               365           0   0.0    0.0     0.0    0.0
+ CAF:lvl8_rHy            Neuron                                               193           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               366           0   0.0    0.0     0.0    0.0
+ CAF:lvl7_rHw            Neuron                                               192           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               367           0   0.0    0.0     0.0    0.0
+ CAF:lvl6_rHu            Neuron                                               191           1   0.0    0.0     0.0    0.0
+  showsPrec_arz          Neuron                                               368           0   0.0    0.0     0.0    0.0

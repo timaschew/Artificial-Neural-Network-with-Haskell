@@ -3,7 +3,7 @@ src/Backpropagation.o
 src/Main
 src/Main.hi
 src/Main.o
-src/Main.prof
+#src/Main.prof
 src/Neuron.hi
 src/Neuron.o
 src/Trainingdata.hi
@@ -11,3 +11,5 @@ src/Trainingdata.o
 src/Main.aux
 src/Main.hp
 src/Main.ps
+src/Utils.hi
+src/Utils.o
