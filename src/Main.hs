@@ -62,7 +62,7 @@ tdata = Trainingdata 4 inputValues outputValues
 -- HERE IT IS - The result from the generic backpropagation algorithm (only 4 learnsteps)
 trainedNet = genericTraining network tdata 0
 
-goodNet = trainNet network 5000 -- (* 4 learnsteps)
+goodNet = trainNet network 10000 -- (* 4 learnsteps)
 
 -- set input layer with the given TrainData and call forwardPass
 -- show only state of the neuron(s) of output layer
