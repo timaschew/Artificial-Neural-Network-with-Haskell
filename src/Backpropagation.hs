@@ -54,6 +54,7 @@ setTrainToInputLayer = set state of input layer neurons, for training or working
 module Backpropagation where
 import Neuron
 import Trainingdata
+import Data.List
 
 -- Backpropagation Configuration
 learnRate = 0.350
@@ -102,7 +103,7 @@ forwardPass :: Network -> Network -> Network
 forwardPass [last] c = c ++ [last]
 forwardPass (l:net) c =  forwardPass updatedLs tmp where 
 	nextLayer = head net
-	updatedNextLayer = calcLayer l nextLayer []
+	updatedNextLayer = calcLayer l nextLayer
 	updatedLs = [updatedNextLayer] ++ (drop 1 net)
 	tmp = c ++ [l]
 
@@ -140,31 +141,38 @@ backPassSteps (l:net) c = backPassSteps updatedNet tmp where
 -- FORWARD PASS (step 1)
 --
 -- dynamic calculating from leftLayer to rightLayer
--- recursion: call calcLayer with leftLayer an rs and calcedFirstNeuron
--- calcedFirstNeuron: previousNeuronList (c) ++ current Neuron (calculated with Neuron constructor) as List
-calcLayer :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
-calcLayer ll [] c = c
-calcLayer ll (n:rl) c = calcLayer ll (rl) tmp where 
-	v_inputSum = calcNeuron ll (weights n) 0
-	v_state = sigmoidFunction (calcNeuron ll (weights n) 0)
-	updatedNeuron = updateNeuron n v_inputSum v_state (weights n)
-	tmp = c ++ [updatedNeuron]
+-- using mixed evaluation: strict and lazy
+-- unfolding list of layer lazily and walking over its elements strictly
+-- from http://book.realworldhaskell.org/read/profiling-and-optimization.html#x_kK1
+calcLayer :: [Neuron] -> [Neuron] -> [Neuron]
+calcLayer ll rl = calcedLayer where
+	calcedLayer = foldl' k [] rl
+	k c n = c `seq` c ++ [updateN n]
+	updateN n = updateNeuron n (v_inputSum n) (v_state n) (weights n)
+	v_inputSum n = calcNeuron ll (weights n)
+	v_state n = sigmoidFunction (v_inputSum n)
 
--- calculate state * weight + offset
--- use offset for calculation in previous recursion
--- @param [Neuron]:	Neuron list of a single layer
+
+
+-- calculate state_i * weight_i 
+-- @param [Neuron]: Neuron list of a single layer
 -- @param [Double]: Neuron weights (w.i) of layer n for a certain Neuron of layer n+1: 
 --
---	[List of Neurons] ---- w.i ---->  [single Neuron] (layer n + 1)
+--	[List of Neurons] ---- w_i ---->  [single Neuron] (layer n + 1)
 --
 -- @return Double: offset
 -- @return Double: netinput (sum) for a certain Neuron of layer n + 1
-calcNeuron :: [Neuron] -> [Double] -> Double -> Double
-calcNeuron [] [] c = c
-calcNeuron (s:states) (w:weights) c = calcNeuron (states) (weights) tmp where
-	v_inputSum = (state s) * w
-	tmp = v_inputSum + c -- 
+calcNeuron :: [Neuron] -> [Double] -> Double
+calcNeuron layer weights = sum sumList where
+	stateList = map (\x -> state x) layer
+	sumList = zipWith (*) (stateList) (weights)
 
+
+
+	
+
+    
+    
 --
 -- CALCULATE ERROR (step 2)
 --

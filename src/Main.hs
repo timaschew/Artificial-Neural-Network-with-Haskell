@@ -80,7 +80,7 @@ demo net inputData = result where
 -- the function / algorithm is very slow :(
 -- 5000 * 4 steps ~ 16 seconds (on a macbook 2GHz)
 trainNet :: Network -> Int -> Network
-trainNet net 0 = {-# SCC "trainNet" #-} net
+trainNet net 0 = net
 trainNet net steps = trainNet trained (steps-1) where
 	trained = genericTraining net tdata 0
 	
