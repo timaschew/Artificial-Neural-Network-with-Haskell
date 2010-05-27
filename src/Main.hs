@@ -26,6 +26,24 @@ import Trainingdata
 import Backpropagation
 import Utils
 
+
+{--
+when call main with args, then args count can be 1 or 2
+first arg is the topolgy file
+second arg is optional and is the traindata file
+
+when no args used, ask the user to configure the topology typing per console
+
+traindata can be loaded with a function which can be called from main menu
+
+main menu = shows after every action
+1 - show topology
+2 - show traindata file (count teaching steps)
+3 - train
+4 - work
+5 - exit
+
+--}
 main::IO()
 main = do
 	

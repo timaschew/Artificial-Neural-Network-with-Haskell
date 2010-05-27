@@ -1,0 +1,17 @@
+# network configuration is only for debugging
+# config the network in haskell directly 
+# example
+
+-- topology and network Configuration
+-- input
+n1_1 = defaultNeuron {state = 1}
+n1_2 = defaultNeuron
+n1_3 = defaultNeuron
+-- hidden
+n2_1 = defaultNeuron { weights = [0.678, 0.211, -0.761] }
+n2_2 = defaultNeuron { weights = [0.033, -0.429, -0.938] }
+n2_3 = defaultNeuron { weights = [0.763, -0.904, -0.330] }
+-- output
+n3_1 = defaultNeuron { weights = [0.632, 0.952, 0.742] }
+
+network = [[n1_1, n1_2, n1_3], [n2_1, n2_2, n2_3], [n3_1]]

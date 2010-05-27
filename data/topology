@@ -1,0 +1,14 @@
+# Topology for ANN. structure
+# each line describe a layer
+
+# first line = input layer 
+# last line = output layer
+# between first and last = hidden layer
+# digit describe the number of neurons in the current layer
+# char 'b' add a bias neuron
+# 2b means 2 neuron + one bias
+
+2b
+3b
+4b
+3
