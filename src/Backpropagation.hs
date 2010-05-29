@@ -63,6 +63,8 @@ momentum = 0.15
 -- GENERIC Algorithm,
 --
 -- do forwardPass with TrainData then backwardPass with TrainData
+-- call genericTraining network trainingdata 0
+-- important to use zero for last parameter
 genericTraining :: Network -> Trainingdata -> Int -> Network
 genericTraining net t (-1) = net -- stop here
 genericTraining net t i = genericTraining trainedNet t loop where
@@ -72,6 +74,7 @@ genericTraining net t i = genericTraining trainedNet t loop where
 	readyNet = setTrainToInputLayer net inputTraining
 	forwarded = forwardPass readyNet []
 	trainedNet = backwardPass forwarded outputTraining
+	--trainedNet = forwarded
 	loop	| i == ((learnSteps t)-1) = (-1)
 		| otherwise = (i+1)
 		
@@ -91,9 +94,17 @@ setTrainToInputLayer net train = updatedNet where
 -- update the state of one neuron recursivly
 setTrainToNeuron :: [Neuron] -> TrainData -> [Neuron] -> [Neuron]
 setTrainToNeuron [] [] c = c 
+setTrainToNeuron layer [] c = layerWithEmptyData where
+	layerWithEmptyData = c ++ (setEmptyNeurons layer [])
 setTrainToNeuron (n:layer) (t:train) c = setTrainToNeuron layer train tmp where
 	updatedNeuron = setState n t
 	tmp = c ++ [updatedNeuron]
+	
+setEmptyNeurons :: [Neuron] -> [Neuron] -> [Neuron]
+setEmptyNeurons [] c = c
+setEmptyNeurons (n:layer) c = setEmptyNeurons layer updatedNeurons where
+	updated = setState n 0
+	updatedNeurons = c ++ [updated]
 
 -- use this method to do the 1. algo step. Example: printNet forwardPass network [[]] 
 -- @params: currentNet newNet
@@ -161,6 +172,7 @@ calcLayer ll (n:rl) c = calcLayer ll (rl) tmp where
 -- @return Double: netinput (sum) for a certain Neuron of layer n + 1
 calcNeuron :: [Neuron] -> [Double] -> Double -> Double
 calcNeuron [] [] c = c
+calcNeuron states [] c = c
 calcNeuron (s:states) (w:weights) c = calcNeuron (states) (weights) tmp where
 	v_inputSum = (state s) * w
 	tmp = v_inputSum + c -- 
