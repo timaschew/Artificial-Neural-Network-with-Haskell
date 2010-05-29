@@ -1,6 +1,7 @@
 import System.IO
 import Data.Char
 import Data.List
+import Trainingdata
 
 main :: IO ()
 main = do
@@ -14,6 +15,29 @@ main = do
 	let outputList = snd traindata	-- [[output1],[output2],...]
 
 	putStrLn "Done."
+
+	
+-- input is the file input (whole string)
+getTrainingdata :: String -> Int -> Trainingdata
+getTrainingdata input steps = result where
+	tupel = parseTrainData (lines input) [] []
+	ti = map (\x -> makeDoubleList x) (fst tupel)
+	to = map (\x -> makeDoubleList x) (snd tupel)
+	result = Trainingdata steps ti to
+
+-- TODO: merge with reverse
+getMergedTrainingdata :: String -> Int -> Trainingdata
+getMergedTrainingdata input steps = result where
+	tupel = parseTrainData (lines input) [] []
+	ti = map (\x -> makeDoubleList x) (fst tupel)
+	to = map (\x -> makeDoubleList x) (snd tupel)
+	result = Trainingdata steps ti to	
+
+		
+makeDoubleList :: [Int] -> [Double]
+makeDoubleList intList = doubleList where
+	doubleList = map fromIntegral intList -- conversion: int -> double with fromIntegral
+	
 
 -- result tupel: ( [[input1],[input2],...] , [[output1],[output2],...] )
 parseTrainData :: [String] -> [[Int]] -> [[Int]] -> ([[Int]], [[Int]])
