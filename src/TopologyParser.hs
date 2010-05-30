@@ -4,6 +4,13 @@ import Utils
 import Data.Char
 import Data.List
 
+import Monad
+import System
+import IO
+import Random
+import Control.Monad.State
+
+
 -- read in the topology file and do a prettyPrint on console
 main :: IO ()
 main = do
@@ -24,13 +31,34 @@ getTopology :: String -> Network
 getTopology input = result where
 	tupleList = parseTopology (lines input) []
 	
-	----------------------------------------------
-	-- TODO: build / generate topo from tupleList
-	----------------------------------------------
+	-- calc the number of inputs of the previous layer. input layer 0 inputs, output layer does not care
+	prevInputs = [0] ++ map (\(n, isBias) -> if isBias then n+1 else n ) tupleList	
 	
-	result = [[(defaultNeuron)]]	-- TODO: neuron network
+	-- generate network
+	result = zipWith (\p (n, b) -> generateLayer p n b) prevInputs tupleList
+
+
+-- Random method
+getOne bounds = do g      <- getStdGen
+                   (x,g') <- return $ randomR bounds g
+                   return x
+
+-- generates a list of Neurons (Layer) with random weights.
+generateLayer :: Int -> Int -> Bool -> [Neuron]
+generateLayer prevN curN isBias = result where
 	
-	
+	-----------
+	--TODO: make Random work, get a list of prevN random weights
+	-----------
+	randomList = getOne (-1.0, 1.0)
+
+	weightList = map (\x -> randomList) [1..prevN]
+	neuronList = map (\x -> defaultNeuron { weights = weightList }) [1..curN]
+	result | isBias && curN > 0 = [defaultNeuron] ++ neuronList
+		   | otherwise = neuronList
+
+-- build a list of tuples. A tuple describes a Layer. 
+-- Int stands for the num of Neurons and the Bool for containing a Bias Neuron.
 parseTopology :: [String] -> [(Int, Bool)] -> [(Int, Bool)]
 parseTopology [] tup = tup
 parseTopology (l:lines) tup = parseTopology lines tup' where
