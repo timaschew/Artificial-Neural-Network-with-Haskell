@@ -146,12 +146,16 @@ backPassSteps (l:net) c = backPassSteps updatedNet tmp where
 -- from http://book.realworldhaskell.org/read/profiling-and-optimization.html#x_kK1
 calcLayer :: [Neuron] -> [Neuron] -> [Neuron]
 calcLayer ll rl = calcedLayer where
-	calcedLayer = foldl' k [] rl
-	k c n = c `seq` c ++ [updateN n]
-	updateN n = updateNeuron n (v_inputSum n) (v_state n) (weights n)
-	v_inputSum n = calcNeuron ll (weights n)
-	v_state n = sigmoidFunction (v_inputSum n)
+	calcedLayer = foldl' updateNeuronList ([], ll) rl
 
+-- update layer of neurons 
+-- avoiding unneeded laziness
+updateNeuronList :: ([Neuron], [Neuron]) -> Neuron -> [Neuron]
+updateNeuronList (x, ll) n = x `seq` ll `seq` (tmp, ll) where
+	v_inputSum = calcNeuron ll (weights n)
+	v_state = sigmoidFunction v_inputSum
+	updated = updateNeuron n (v_inputSum) (v_state) (weights n)
+	tmp = x ++ [updated]
 
 
 -- calculate state_i * weight_i 
