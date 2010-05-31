@@ -68,8 +68,8 @@ momentum = 0.15
 genericTraining :: Network -> Trainingdata -> Int -> Network
 genericTraining net t (-1) = net -- stop here
 genericTraining net t i = genericTraining trainedNet t loop where
-	inputTraining = (input t) !! i
-	outputTraining = (output t) !! i
+	inputTraining = (inputs t) !! i
+	outputTraining = (outputs t) !! i
 	
 	readyNet = setTrainToInputLayer net inputTraining
 	forwarded = forwardPass readyNet []
