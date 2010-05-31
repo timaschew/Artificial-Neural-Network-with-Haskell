@@ -38,21 +38,22 @@ getTopology input = result where
 	result = zipWith (\p (n, b) -> generateLayer p n b) prevInputs tupleList
 
 
--- Random method
-getOne bounds = do g      <- getStdGen
-                   (x,g') <- return $ randomR bounds g
-                   return x
+-- returns a random number in range (0.0 - 1.0)
+getRandNum = do x <- randomRIO (0, 1 :: Double) ; return x
+
+-- Alternative random function returns a list of random numbers
+-- getRandNum = getStdGen >>= print . take 10 . randomRs (0,9::Double)
+
+
 
 -- generates a list of Neurons (Layer) with random weights.
 generateLayer :: Int -> Int -> Bool -> [Neuron]
 generateLayer prevN curN isBias = result where
 	
-	-----------
-	--TODO: make Random work, get a list of prevN random weights
-	-----------
-	randomList = getOne (-1.0, 1.0)
-
-	weightList = map (\x -> randomList) [1..prevN]
+	-- ERROR here: Couldn't match expected type `Double'against inferred type `IO Double'
+	bla = getRandNum
+	
+	weightList = map (\x -> bla) [1..prevN]
 	neuronList = map (\x -> defaultNeuron { weights = weightList }) [1..curN]
 	result | isBias && curN > 0 = [defaultNeuron] ++ neuronList
 		   | otherwise = neuronList
