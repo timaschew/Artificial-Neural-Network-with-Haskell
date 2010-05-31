@@ -41,7 +41,11 @@ setState n s = Neuron (inputSum n) check (weights n) (delta n) (deltaWeights n) 
 		| otherwise = s
 
 -- sigmoid function
+-- 	   1
+-- ____________________
+--	   - (1/10) * x
+-- 1 + e ^
 sigmoidFunction :: (Floating a) => a -> a
-sigmoidFunction x = 1 / (1 + (exp (-x)))
+sigmoidFunction x = 1 / (1 + (exp (-((1/10)*x))))
 
 
