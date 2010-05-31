@@ -39,7 +39,8 @@ Questions / Rules for mapping strings on neurons
 	-- workflow to test text training
 	input <- readFile "data/traindata/txt/de_en_01.train"
 	-- file has 2546 words
-	let td = getTrainingdata input 2546
+	let td_z = getTrainingdata input 2546
+	let td = transformTraindata td_z
 	-- or alternating trainingdata
 	let td2 = makeAlterningTrainingdata input 2546
 	
@@ -96,15 +97,26 @@ n2_10 = defaultNeuron { weights =
 [1.292, 1.675, -1.493, -1.559, -1.999, 0.323, 0.869, 0.562, 1.917, -0.101, -0.756, -0.349, -1.711, 0.762, -1.132, -0.473, 1.827, -0.287, 0.863, -1.583] }
 -- output
 n3_1 = defaultNeuron { weights = [0.879, 1.2, -1.915, -0.723, -0.297, -1.229, -1.737, 1.33, 1.161, -0.24, -0.438] }
+n3_2 = defaultNeuron { weights = [-0.279, 0.2, 0.415, -2.713, 0.297, -0.229, -2.237, -1.83, 0.81, -1.84, 0.138] }
 
-network = [[b1_0, n1_1, n1_2, n1_3, n1_4, n1_5, n1_6, n1_7, n1_8, n1_9, n1_10, n1_11, n1_12, n1_13, n1_14, n1_15, n1_16, n1_17, n1_18, n1_19], [b2_0, n2_1, n2_2, n2_3, n2_4, n2_5, n2_6, n2_7, n2_8, n2_9, n2_10], [n3_1]]
+network = [[b1_0, n1_1, n1_2, n1_3, n1_4, n1_5, n1_6, n1_7, n1_8, n1_9, n1_10, n1_11, n1_12, n1_13, n1_14, n1_15, n1_16, n1_17, n1_18, n1_19], [b2_0, n2_1, n2_2, n2_3, n2_4, n2_5, n2_6, n2_7, n2_8, n2_9, n2_10], [n3_1, n3_2]]
 
 demo :: Network -> TrainData -> [Double]
 demo net inputData = result where
 	inputted = setTrainToInputLayer net inputData
 	forwarded = forwardPass inputted []
 	result = makeStateListOfLayer (last forwarded) []
-	
+
+transformTraindata :: Trainingdata -> Trainingdata
+transformTraindata train = transformed where
+	inp = inputs train
+	reduceValues = map (map makeDown) inp
+	transformed = Trainingdata (learnSteps train) reduceValues (outputs train)
+
+-- move range from ascii code a - z (97 - 122) to -13 until 12
+-- using the sigmoid function .... e ^ -(1/10) x
+makeDown x = x - 97 - 13
+
 trainNet :: Network -> Int -> Trainingdata -> Network
 trainNet net 0 tdata = net
 trainNet net steps tdata = trainNet trained (steps-1) tdata where
