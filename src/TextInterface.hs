@@ -205,6 +205,55 @@ filterRealChars s = stripNotRealChars where
 	isRealChar c = ((ord c) >= 97 && (ord c) <= 122) || (ord c ) == 32
 
 
+{--
+Ziffer 	Repräsentierte Buchstaben
+1 	B, F, P, V
+2 	C, G, J, K, Q, S, X, Z
+3 	D, T
+4 	L
+5 	M, N
+6 	R
+--}
+
+type Soundex = (Char, Int, Int, Int)
+
+soundexAlgo :: String -> Soundex
+soundexAlgo str = r where
+	
+	s = skipVocals (tail str)
+	char0 = head str
+	
+	i1	| ((length s) >= 1) = mapSoundexCode (s !! 0)
+		| otherwise = 0
+	i2	| ((length s) >= 2) = mapSoundexCode (s !! 1)
+		| otherwise = 0
+	i3 	| ((length s) >= 3) = mapSoundexCode (s !! 2)
+		| otherwise = 0
+		
+	r = ((head str),i1,i2,i3)
+
+nextChar :: Char -> Int -> String -> Int
+nextChar old i s = r where
+	ch	| ((length s) >= (i+1)) = s !! i
+		| otherwise = 'X'
+	r2 = if (ch /= 'X' && ch /= old) then mapSoundexCode ch else nextChar old (i+1) s	
+	r	| ch == 'X' = 0
+		| otherwise = r2
+	
+skipVocals :: String -> String
+skipVocals str = filter (\x -> x /= 'a' && x /= 'e' && x /= 'i' && x /= 'o' && x /= 'u' &&
+				x /= 'h' && x /= 'w' && x /= 'y') str
+
+mapSoundexCode :: Char -> Int
+mapSoundexCode x = r where
+	r	| x == 'b' || x == 'f' || x == 'p' || x == 'v' = 1
+		| x == 'c' || x == 'g' || x == 'j' || x == 'k' || x == 'q' || x == 's' || x == 'x' || x == 'z' = 2
+		| x == 'd' || x == 't' = 3
+		| x == 'l' = 4
+		| x == 'm' || x == 'n' = 5
+		| x == 'r' = 6
+		| otherwise = 9
+
 -- replace 2nd arg with 3rd arg in 1st arg
 replace :: Eq a => [a] -> [a] -> [a] -> [a]
 replace [] _ _ = []
