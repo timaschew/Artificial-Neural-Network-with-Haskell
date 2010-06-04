@@ -207,6 +207,7 @@ filterRealChars s = stripNotRealChars where
 
 {--
 Ziffer 	Repräsentierte Buchstaben
+0	- / no letter
 1 	B, F, P, V
 2 	C, G, J, K, Q, S, X, Z
 3 	D, T
@@ -217,19 +218,30 @@ Ziffer 	Repräsentierte Buchstaben
 
 type Soundex = (Char, Int, Int, Int)
 
+skipDoubleChars :: [Char] -> Char -> [Char] -> [Char]
+skipDoubleChars [x] oldChar c = r where
+	r	| (x == oldChar) = c
+		| otherwise = c ++ [x]
+skipDoubleChars (x:l) oldChar c = skipDoubleChars l x r where
+	tmp	| (oldChar == x) = []
+		| otherwise = [x]
+	r = c ++ tmp
+
+ignoreDoubleChars :: String -> String
+ignoreDoubleChars str = skipDoubleChars str '\NUL' []
+
+
 soundexAlgo :: String -> Soundex
 soundexAlgo str = r where
-	
-	s = skipVocals (tail str)
-	char0 = head str
-	
+	cleaned = ignoreDoubleChars str
+	s = skipVocals (tail cleaned)
+	char0 = head cleaned
 	i1	| ((length s) >= 1) = mapSoundexCode (s !! 0)
 		| otherwise = 0
 	i2	| ((length s) >= 2) = mapSoundexCode (s !! 1)
 		| otherwise = 0
 	i3 	| ((length s) >= 3) = mapSoundexCode (s !! 2)
 		| otherwise = 0
-		
 	r = ((head str),i1,i2,i3)
 
 nextChar :: Char -> Int -> String -> Int
