@@ -2,6 +2,7 @@ module TextInterface where
 import Data.Char
 import System.IO
 import System.Directory
+import Data.List
 
 import Neuron
 import Trainingdata
@@ -39,8 +40,7 @@ Questions / Rules for mapping strings on neurons
 	-- workflow to test text training
 	input <- readFile "data/traindata/txt/de_en_01.train"
 	-- file has 2546 words
-	let td_z = getTrainingdata input 2546
-	let td = transformTraindata td_z
+	let td = getTrainingdata input 2546
 	-- or alternating trainingdata
 	let td2 = makeAlterningTrainingdata input 2546
 	
@@ -68,54 +68,40 @@ n1_11 = defaultNeuron
 n1_12 = defaultNeuron
 n1_13 = defaultNeuron
 n1_14 = defaultNeuron
-n1_15 = defaultNeuron
-n1_16 = defaultNeuron
-n1_17 = defaultNeuron
-n1_18 = defaultNeuron
-n1_19 = defaultNeuron
+
 -- hidden
-b2_0 = biasNeuron { weights = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] }
+b2_0 = biasNeuron { weights = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] }
 n2_1 = defaultNeuron { weights = 
-[-0.966, 1.289, 0.467, 0.624, -1.199, 0.364, -1.37, 0.56, -1.503, -0.724, 0.429, -0.377, 0.521, -1.632, 1.007, -1.622, 1.079, -0.827, 1.135, -1.914] }
+[-0.966, 1.289, 0.467, 0.624, -1.199, 0.364, -1.37, 0.56, -1.503, -0.724, 0.429, -0.377, 0.521, -1.632, 1.007] }
 n2_2 = defaultNeuron { weights = 
-[-1.185, 1.029, 0.719, -0.507, 0.627, -1.296, 0.243, 1.172, -0.038, 0.866, -0.653, 0.571, -0.427, 1.548, -1.379, -0.392, 0.599, -0.42, 0.708, 0.547] }
+[-1.185, 1.029, 0.719, -0.507, 0.627, -1.296, 0.243, 1.172, -0.038, 0.866, -0.653, 0.571, -0.427, 1.548, -1.379] }
 n2_3 = defaultNeuron { weights = 
-[0.012, 1.944, 0.432, 1.187, -0.592, -0.548, -0.96, -1.824, 0.531, -1.325, 1.984, 1.3, 0.964, -0.805, 1.926, 1.709, -1.516, 1.294, -1.238, -1.541] }
+[0.012, 1.944, 0.432, 1.187, -0.592, -0.548, -0.96, -1.824, 0.531, -1.325, 1.984, 1.3, 0.964, -0.805, 1.926] }
 n2_4 = defaultNeuron { weights = 
-[-0.5, 0.914, -0.672, -1.423, -0.459, 0.1, -1.184, -0.482, 0.075, 1.151, -0.435, -1.795, 1.757, 1.264, -0.057, -0.901, -1.43, 1.116, 1.67, 0.44] }
+[-0.5, 0.914, -0.672, -1.423, -0.459, 0.1, -1.184, -0.482, 0.075, 1.151, -0.435, -1.795, 1.757, 1.264, -0.057] }
 n2_5 = defaultNeuron { weights = 
-[-0.415, -0.895, 0.065, 0.448, -1.689, 0.307, 1.455, -1.346, 1.771, 0.442, -0.024, 1.482, -0.752, 0.8, -1.271, -1.342, -0.123, 0.085, 0.075, -0.466] }
+[-0.415, -0.895, 0.065, 0.448, -1.689, 0.307, 1.455, -1.346, 1.771, 0.442, -0.024, 1.482, -0.752, 0.8, -1.271] }
 n2_6 = defaultNeuron { weights = 
-[-0.203, -1.815, -1.119, -0.637, 1.863, 0.521, -0.49, 1.191, -1.551, 0.296, -1.42, -0.237, -1.105, -1.511, -0.789, -1.716, 0.648, 1.063, 1.826, -0.178] }
+[-0.203, -1.815, -1.119, -0.637, 1.863, 0.521, -0.49, 1.191, -1.551, 0.296, -1.42, -0.237, -1.105, -1.511, -0.789] }
 n2_7 = defaultNeuron { weights = 
-[1.603, -0.334, 0.114, 0.326, -1.983, 1.341, -1.294, 0.913, -0.563, 0.317, -0.652, 0.034, 0.806, 0.408, 0.215, -1.222, 1.499, 0.738, -1.445, 0.415] }
+[1.603, -0.334, 0.114, 0.326, -1.983, 1.341, -1.294, 0.913, -0.563, 0.317, -0.652, 0.034, 0.806, 0.408, 0.215] }
 n2_8 = defaultNeuron { weights = 
-[-1.929, 0.542, -0.796, 0.375, -1.6, 1.605, -0.732, 0.579, 1.113, 0.015, -1.356, -1.992, 0.285, 1.944, -0.249, 1.654, 0.475, 0.424, 1.222, -1.054] }
+[-1.929, 0.542, -0.796, 0.375, -1.6, 1.605, -0.732, 0.579, 1.113, 0.015, -1.356, -1.992, 0.285, 1.944, -0.249] }
 n2_9 = defaultNeuron { weights = 
-[-0.714, 1.306, -1.686, -1.85, 0.645, 1.83, 0.611, 1.039, 1.245, 0.088, 1.009, 1.271, -1.68, 1.359, 0.356, 1.338, 0.191, -1.061, 1.411, 0.494] }
+[-0.714, 1.306, -1.686, -1.85, 0.645, 1.83, 0.611, 1.039, 1.245, 0.088, 1.009, 1.271, -1.68, 1.359, 0.356] }
 n2_10 = defaultNeuron { weights = 
-[1.292, 1.675, -1.493, -1.559, -1.999, 0.323, 0.869, 0.562, 1.917, -0.101, -0.756, -0.349, -1.711, 0.762, -1.132, -0.473, 1.827, -0.287, 0.863, -1.583] }
+[1.292, 1.675, -1.493, -1.559, -1.999, 0.323, 0.869, 0.562, 1.917, -0.101, -0.756, -0.349, -1.711, 0.762, -1.132] }
 -- output
 n3_1 = defaultNeuron { weights = [0.879, 1.2, -1.915, -0.723, -0.297, -1.229, -1.737, 1.33, 1.161, -0.24, -0.438] }
 n3_2 = defaultNeuron { weights = [-0.279, 0.2, 0.415, -2.713, 0.297, -0.229, -2.237, -1.83, 0.81, -1.84, 0.138] }
 
-network = [[b1_0, n1_1, n1_2, n1_3, n1_4, n1_5, n1_6, n1_7, n1_8, n1_9, n1_10, n1_11, n1_12, n1_13, n1_14, n1_15, n1_16, n1_17, n1_18, n1_19], [b2_0, n2_1, n2_2, n2_3, n2_4, n2_5, n2_6, n2_7, n2_8, n2_9, n2_10], [n3_1, n3_2]]
+network = [[b1_0, n1_1, n1_2, n1_3, n1_4, n1_5, n1_6, n1_7, n1_8, n1_9, n1_10, n1_11, n1_12, n1_13, n1_14], [b2_0, n2_1, n2_2, n2_3, n2_4, n2_5, n2_6, n2_7, n2_8, n2_9, n2_10], [n3_1, n3_2]]
 
 demo :: Network -> TrainData -> [Double]
 demo net inputData = result where
 	inputted = setTrainToInputLayer net inputData
 	forwarded = forwardPass inputted []
 	result = makeStateListOfLayer (last forwarded) []
-
-transformTraindata :: Trainingdata -> Trainingdata
-transformTraindata train = transformed where
-	inp = inputs train
-	reduceValues = map (map makeDown) inp
-	transformed = Trainingdata (learnSteps train) reduceValues (outputs train)
-
--- move range from ascii code a - z (97 - 122) to -13 until 12
--- using the sigmoid function .... e ^ -(1/10) x
-makeDown x = x - 97 - 13
 
 trainNet :: Network -> Int -> Trainingdata -> Network
 trainNet net 0 tdata = net
@@ -146,9 +132,9 @@ startImport = do
 	outputResult <- getLine
 	
 	putStrLn "Konvertierung erfolgt ..."
-	let converted = map stringToIntList w 
+	let converted = w
 	
-	exportData converted fileName outputResult
+	exportData w fileName outputResult
 	
 	putStrLn "TrainFinished"
 	
@@ -159,17 +145,18 @@ importText s = do
 	return file
 
 -- export data to fileName
+
 exportData trainData fileName outputResult = do
 	let output = prepareData trainData outputResult
 	let fileNameNew = reverse (drop 4 (reverse fileName)) ++ ".train"
 	writeFile (path ++ "../" ++ fileNameNew) output
 
 -- make string of converted data for writing to a file
-prepareData :: [[Int]] -> String -> String
+prepareData :: [String] -> String -> String
 prepareData d outputResult = result where 
 	--bla = map (makeComment) d
-	strListList = map (map (show)) d -- convert Int to String (for using unwords)
-	withComments = map (makeCommentAndOutput outputResult) strListList 
+	--strListList = map (map (show)) d -- convert Int to String (for using unwords)
+	withComments = map (makeCommentAndOutput outputResult) d 
 	concated = map unwords withComments -- concat list with whitespaces
 	prepared = map (++ "\n") concated -- add newline after each list element
 	maxWordLength = maximum (map length d)
@@ -177,26 +164,48 @@ prepareData d outputResult = result where
 	result = "# MAXIMUM: "++ (show maxWordLength)  ++ "\n" ++ concat prepared
 
 -- produce a comment with the reconverted string and the teaching output value
-makeCommentAndOutput :: String -> [String] -> [String] 
+makeCommentAndOutput :: String -> String -> [String] 
 makeCommentAndOutput output slist = tmp where
-	digit x = read x :: Int -- read as Int
-	digitList = map digit slist -- for each string element ("97")
-	str = map chr digitList -- reconvert from [Int] into String
-	
+	soundexBin = soundexToBitStream (soundexAlgo slist)
 	-- build comment with real string
 	-- add converted char int valueus (remove first whitespace)
 	-- add teaching output value
-	tmp = ["# " ++ str ++ "\n"] ++ slist ++ ["- " ++ output]
+	tmp = ["# " ++ slist ++ "\n"] ++ [soundexBin] ++ ["- " ++ output]
 
+str2Soundex :: String -> String
+str2Soundex str = soundexToBitStream (soundexAlgo str)
 
--- converts a string into a char int values list (and lower case)
--- map a to 97
--- ...
--- map z to 122
-stringToIntList :: String -> [Int]
-stringToIntList s = intList where	
-	intList = map (\x -> ord (toLower x)) s
-	
+str2ST str = map readDigit (words (str2Soundex str))
+
+readDigit x = read x :: Double
+
+soundexToBitStream :: Soundex -> String
+soundexToBitStream (c, i1, i2, i3) = tmp where
+	bin1 = dec2binLeading ((ord (toLower c)) - 97) 5
+	bin2 = dec2binLeading i1 3
+	bin3 = dec2binLeading i2 3
+	bin4 = dec2binLeading i3 3
+	tmp = unwords (bin1 ++ bin2 ++ bin3 ++ bin4)
+
+dec2binLeading :: Int -> Int -> [String]
+dec2binLeading x num = tmp where
+	y = dec2bin x
+	repList = repeat 0
+	remainingNumbers = num - (length y)
+	list1 = take remainingNumbers repList
+	list2 = map int2Str list1
+	list3 = map makeString y
+	tmp 	| (length y <= num) = list2 ++ list3
+		| otherwise = list2
+
+makeString :: Char -> String
+makeString x = [x]
+
+int2Str x = show x
+
+dec2bin = map i2c . reverse . unfoldr decomp
+    where decomp n = if n == 0 then Nothing else Just(n `mod` 2, n `div` 2)
+          i2c i = if i == 0 then '0' else '1'
 	
 -- ignore all chars except a-z and white spaces
 filterRealChars :: String -> String
@@ -243,14 +252,6 @@ soundexAlgo str = r where
 	i3 	| ((length s) >= 3) = mapSoundexCode (s !! 2)
 		| otherwise = 0
 	r = ((head str),i1,i2,i3)
-
-nextChar :: Char -> Int -> String -> Int
-nextChar old i s = r where
-	ch	| ((length s) >= (i+1)) = s !! i
-		| otherwise = 'X'
-	r2 = if (ch /= 'X' && ch /= old) then mapSoundexCode ch else nextChar old (i+1) s	
-	r	| ch == 'X' = 0
-		| otherwise = r2
 	
 skipVocals :: String -> String
 skipVocals str = filter (\x -> x /= 'a' && x /= 'e' && x /= 'i' && x /= 'o' && x /= 'u' &&
