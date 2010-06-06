@@ -9,6 +9,7 @@ import Trainingdata
 import TraindataParser
 import Backpropagation
 import Utils
+import Config
 
 {--
 Characters to skip
@@ -108,7 +109,7 @@ trainNet net 0 tdata = net
 trainNet net steps tdata = trainNet trained (steps-1) tdata where
 	trained = genericTraining net tdata 0
 
-path = "data/traindata/txt/raw/"
+path = (dataPath ++ "traindata/txt/raw/")
 
 -- import text from a file an generate a train file for the ANN
 startImport :: IO ()

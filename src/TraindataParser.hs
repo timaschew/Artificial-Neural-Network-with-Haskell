@@ -3,11 +3,12 @@ import System.IO
 import Data.Char
 import Data.List
 import Trainingdata
+import Config
 
 testTrain :: IO ()
 testTrain = do
 	-- read files
-	input <- readFile "../data/traindata/txt/de_01.train"
+	input <- readFile (dataPath ++ "traindata/txt/de_01.train")
 	
 	putStrLn "parsing traindata file..."
 	

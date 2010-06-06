@@ -25,6 +25,7 @@ import Neuron
 import Trainingdata
 import Backpropagation
 import Utils
+import Config
 import TopologyParser
 import TraindataParser
 import Text.Printf
@@ -55,10 +56,10 @@ main = do
 	-- TODO add main parameter for topology and traindata file
 
 	-- init traindata
-	tdata <- initTraindata "../data/trainingdata"
+	tdata <- initTraindata (dataPath ++ "trainingdata")
 
 	-- init network
-	network <- initNetwork  "../data/topology"	-- XOR training-file
+	network <- initNetwork  (dataPath ++ "topology") -- XOR training-file
 	
 	-- train network
 	let goodNet = trainNet network tdata 10000 -- (* 4 learnsteps)
