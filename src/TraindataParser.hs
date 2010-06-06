@@ -4,10 +4,10 @@ import Data.Char
 import Data.List
 import Trainingdata
 
-main :: IO ()
-main = do
+testTrain :: IO ()
+testTrain = do
 	-- read files
-	input <- readFile "01.train"
+	input <- readFile "../data/traindata/txt/de_01.train"
 	
 	putStrLn "parsing traindata file..."
 	

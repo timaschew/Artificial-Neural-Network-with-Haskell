@@ -25,7 +25,11 @@ import Neuron
 import Trainingdata
 import Backpropagation
 import Utils
+import TopologyParser
+import TraindataParser
+import Text.Printf
 
+import Data.Char
 
 {--
 when call main with args, then args count can be 1 or 2
@@ -44,62 +48,103 @@ main menu = shows after every action
 5 - exit
 
 --}
+
+-- Note: works only
 main::IO()
 main = do
+	-- TODO add main parameter for topology and traindata file
+
+	-- init traindata
+	tdata <- initTraindata "../data/trainingdata"
+
+	-- init network
+	network <- initNetwork  "../data/topology"	-- XOR training-file
 	
-	--printState $ concat forwardedNetwork
-	--putStr $ "output: "
-	--printState $ concat [last forwardedNetwork]
-	print goodNet
+	-- train network
+	let goodNet = trainNet network tdata 10000 -- (* 4 learnsteps)
 	
--- #################################
--- Topology and Neuron Configuration
--- input
-b1_0 = biasNeuron 
-n1_1 = defaultNeuron
-n1_2 = defaultNeuron
--- hidden
-b2_0 = biasNeuron { weights = [0,0,0] }
-n2_1 = defaultNeuron { weights = [0.033, -0.429, -0.938] }
-n2_2 = defaultNeuron { weights = [0.763, -0.904, -0.330] }
--- output
-n3_1 = defaultNeuron { weights = [0.632, 0.952, 0.742] }
+	-- start menu loop
+	menuLoop network goodNet
 
-network = [[b1_0, n1_1, n1_2], [b2_0, n2_1, n2_2], [n3_1]]
--- #################################
+-- 2 network params only temporary. In case goodNet fails, prettyPrint still works with network.
+menuLoop network goodNet = do
+	printMenu	
+	action <- getLine
 
---
--- Start generic way
---
+	-- choose action
+	let doAction | action == "1" = prettyPrint network
+				 | action == "2" = dummyAction
+				 | action == "3" = dummyAction
+				 | action == "4" = onWork goodNet
+				 | action == "5" = dummyAction				 
+				 | action == "0" = return()
+				 | otherwise = onError
+	
+	-- invoke action
+	doAction
+	if action /= "0"
+		then menuLoop network goodNet
+		else putStrLn "\nGoodbye!"
 
--- XOR trainingdata
-inputValues = [[0,0],[0,1],[1,0],[1,1]]
-outputValues = [[0],[1],[1],[0]]
-tdata = Trainingdata 4 inputValues outputValues
+	
+printMenu :: IO ()
+printMenu = do
+	printf "-----------------------\n"
+	printf "--  Main Menu\n"
+	printf "-----------------------\n"
+	printf "[1] show topology\n"
+	printf "[2] show traindata file\n"
+	printf "[3] train ann\n"
+	printf "[4] work\n"
+	printf "[0] exit\n"
+	printf "-----------------------\n"
+	printf "select one action: "
+	
+onError :: IO ()	
+onError = do
+	putStrLn "\nunknown action!\n"
+	--main
 
--- HERE IT IS - The result from the generic backpropagation algorithm (only 4 learnsteps)
-trainedNet = genericTraining network tdata 0
+onWork :: Network -> IO ()
+onWork net = do
+	printf "\n[work] please enter some ann input (e.g: 1 0): \n"
+	inputStr <- getLine
+	let values = map (\w -> read w::Double) (words inputStr)
+	print values	
+	print $ work net values 
 
-goodNet = trainNet network 10000 -- (* 4 learnsteps)
+dummyAction :: IO()
+dummyAction = do
+	putStrLn "\nOooops! This action is not implemented yet.\n"
 
--- set input layer with the given TrainData and call forwardPass
--- show only state of the neuron(s) of output layer
--- exmaple use case:
--- 1 start GHCi
--- 2 call 'goodNet' and wait - calculates the network
--- 3 call 'demo goodNet [1,0]' for showing result for the given input
-demo :: Network -> TrainData -> [Double]
-demo net inputData = result where
-	inputted = setTrainToInputLayer net inputData
-	forwarded = forwardPass inputted []
-	result = makeStateListOfLayer (last forwarded) []
+
+initNetwork :: String -> IO Network
+initNetwork filename = do
+	input <- readFile filename
+	randNums <- mapM (\x -> getRandNum) [1..countNeededRandNums input]
+	let net = getTopology input randNums
+	; return net
+
+		
+initTraindata :: String -> IO Trainingdata
+initTraindata filename = do
+	input <- readFile filename
+	let tdata = getTrainingdata input 4
+	; return tdata
 
 -- let train the net <steps> times
 -- the function / algorithm is very slow :(
 -- 5000 * 4 steps ~ 16 seconds (on a macbook 2GHz)
-trainNet :: Network -> Int -> Network
-trainNet net 0 = {-# SCC "trainNet" #-} net
-trainNet net steps = trainNet trained (steps-1) where
+trainNet :: Network -> Trainingdata -> Int -> Network
+trainNet net tdata 0 = {-# SCC "trainNet" #-} net
+trainNet net tdata steps = trainNet trained tdata (steps-1) where
 	trained = genericTraining net tdata 0
 	
 	
+-- how to use:
+-- call 'work goodNet [1,0]' for showing result for the given input
+work :: Network -> TrainData -> [Double]
+work net inputData = result where
+	inputted = setTrainToInputLayer net inputData
+	forwarded = forwardPass inputted []
+	result = makeStateListOfLayer (last forwarded) []
