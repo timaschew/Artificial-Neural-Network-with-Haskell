@@ -3,73 +3,101 @@ import Neuron
 import Utils
 import Data.Char
 import Data.List
-
-import Monad
-import System
-import IO
+import Data.List.Split	-- cabal install split
 import Random
-import Control.Monad.State
 
 
 -- read in the topology file and do a prettyPrint on console
-main :: IO ()
-main = do
+testTopo = do
 	-- read file
 	input <- readFile "../data/topology"
 	
 	putStrLn "parsing topology file..."
-	
-	let topology = getTopology input
-	
+	randNums <- mapM (\x -> getRandNum) [1..countNeededRandNums input]
+	let topology = getTopology input randNums
 	putStrLn "Done."
-	prettyPrint topology	
+	prettyPrint topology
 
 
--- param: whole file input str
--- returns the generated Network
-getTopology :: String -> Network
-getTopology input = result where
-	tupleList = parseTopology (lines input) []
+
+-- returns a random number in range (-1.0 to 1.0)
+getRandNum :: IO Double
+getRandNum = do randomRIO (-1, 1 :: Double)
+
+-- calces and returns the number of needed random weights
+-- each neuron has a weight list needed for calcing the input: weight * output of the previous layer neurons
+-- total = prev layer size (with bias) * layer size (without bias)
+countNeededRandNums :: String -> Int
+countNeededRandNums input = total where
+	tupleList = parseTopology (lines input)
 	
 	-- calc the number of inputs of the previous layer. input layer 0 inputs, output layer does not care
-	prevInputs = [0] ++ map (\(n, isBias) -> if isBias then n+1 else n ) tupleList	
+	prevInputs = [0] ++ map (\(n, isBias) -> if isBias then n+1 else n ) (init tupleList)
 	
-	-- generate network
-	result = zipWith (\p (n, b) -> generateLayer p n b) prevInputs tupleList
+	-- neuron count of each layer, bias are ignored, because they dont have any inputs.
+	layerNeuronCount = map (\(n, isBias) -> n ) tupleList
+	
+	--result = zipWith (\pn cn-> pn*cn) prevInputs layerNeuronCount
+	total = sum $ zipWith (*) prevInputs layerNeuronCount
 
 
--- returns a random number in range (0.0 - 1.0)
-getRandNum = do x <- randomRIO (0, 1 :: Double) ; return x
+-- returns an list of list of list: layerList -> neuronList -> neuronWeightList ==> all Network weights
+makeWeightLists :: [Double] -> [(Int, Bool)] -> [Int] -> [[[Double]]]
+makeWeightLists randNums [] _ = []
+makeWeightLists randNums (l:layers) (p:prevInputs) = [w] ++ makeWeightLists randNums' layers prevInputs where
+	-- take one layers weights from randNums
+	weightList = take (p*(fst l)) randNums
+	
+	-- split randNums into weight sublists. every neuron of one layer has the same num of weights.
+	w = splitEvery p weightList
+	
+	-- drop taken weights	
+	randNums' = drop (p*(fst l)) randNums
 
--- Alternative random function returns a list of random numbers
--- getRandNum = getStdGen >>= print . take 10 . randomRs (0,9::Double)
 
+-- input: whole file input str
+-- randNums: a list of random Double values, the list size is equal to the total needed neuron weights in the network.
+-- returns the generated Network
+getTopology :: String -> [Double] -> Network
+getTopology input randNums = result where
+	tupleList = parseTopology (lines input)
+	
+	-- calc the number of inputs of the previous layer. input layer has 0 inputs, output layer does not care
+	prevInputs = [0] ++ map (\(n, isBias) -> if isBias then n+1 else n ) (init tupleList)
+	
+	-- fill input layer with empty lists, because input neurons dont have weights
+	firstLayerInputs = [map (\x -> []) [1.. (fst $ head tupleList)]]
+	
+	-- skip first tuple and prevInputs elements (no random weights needed)
+	weightLists = firstLayerInputs ++ makeWeightLists randNums (tail tupleList) (tail prevInputs)
+	
+	-- generate network. prevInputs, tupleList and weightLists must have the same length == layer count
+	result = zipWith3 (\p (n, b) w -> generateLayer p n b w) prevInputs tupleList weightLists
 
 
 -- generates a list of Neurons (Layer) with random weights.
-generateLayer :: Int -> Int -> Bool -> [Neuron]
-generateLayer prevN curN isBias = result where
+generateLayer :: Int -> Int -> Bool ->  [[Double]] -> [Neuron]
+generateLayer prevN curN isBias randNums = result where
+	-- randNums is a Double list of list, which represents the random weights of the current layer neurons
+	neuronList = map (\x -> defaultNeuron {weights = x}) randNums
 	
-	-- ERROR here: Couldn't match expected type `Double'against inferred type `IO Double'
-	bla = getRandNum
-	
-	weightList = map (\x -> bla) [1..prevN]
-	neuronList = map (\x -> defaultNeuron { weights = weightList }) [1..curN]
-	result | isBias && curN > 0 = [defaultNeuron] ++ neuronList
-		   | otherwise = neuronList
+	-- return the neuronList and add an biasNeuron if needed
+	result | isBias && curN > 0 = [biasNeuron {weights = (map (\x -> 0.0) [1..prevN])}] ++ neuronList
+	       | otherwise = neuronList
+
 
 -- build a list of tuples. A tuple describes a Layer. 
 -- Int stands for the num of Neurons and the Bool for containing a Bias Neuron.
-parseTopology :: [String] -> [(Int, Bool)] -> [(Int, Bool)]
-parseTopology [] tup = tup
-parseTopology (l:lines) tup = parseTopology lines tup' where
-	hasData = isDataLine l	
+parseTopology :: [String] -> [(Int, Bool)]
+parseTopology [] = []
+parseTopology (l:lines) = tup ++ (parseTopology lines) where
+	hasData = isDataLine l
 	lineData = if hasData
 					then getLineData l	
 					else (0, False)
-	tup' | hasData = tup ++ [(fst lineData, snd lineData)]
-		 | otherwise = tup	-- nothing to add
-	
+	tup | hasData = [(fst lineData, snd lineData)]
+		| otherwise = []	-- nothing to add
+
 	
 -- takes the first value in line. Other following whitespace separated values will be ignored
 -- accepted formats for 2 neurons: 2, 2b, b2
