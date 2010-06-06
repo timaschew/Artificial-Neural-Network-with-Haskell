@@ -27,9 +27,11 @@ import Backpropagation
 import Utils
 import TopologyParser
 import TraindataParser
-import Text.Printf
 
+import Text.Printf
 import Data.Char
+import System.Environment
+
 
 {--
 when call main with args, then args count can be 1 or 2
@@ -49,30 +51,35 @@ main menu = shows after every action
 
 --}
 
--- Note: works only
-main::IO()
+
+getDefaultTopology :: String
+getDefaultTopology = "../data/topology"
+
+getDefaultTrainData :: String
+getDefaultTrainData = "../data/trainingdata"	-- XOR training-file
+
 main = do
 	-- TODO add main parameter for topology and traindata file
 
 	-- init traindata
-	tdata <- initTraindata "../data/trainingdata"
+	tdata <- initTraindata "../data/trainingdata"	
 
 	-- init network
-	network <- initNetwork  "../data/topology"	-- XOR training-file
+	network <- initNetwork  "2b\n2b\n1\n"
+	--network <- initNetworkFromFile  "../data/topology"
 	
 	-- train network
 	let goodNet = trainNet network tdata 10000 -- (* 4 learnsteps)
 	
 	-- start menu loop
-	menuLoop network goodNet
+	menuLoop goodNet
 
--- 2 network params only temporary. In case goodNet fails, prettyPrint still works with network.
-menuLoop network goodNet = do
+menuLoop goodNet = do
 	printMenu	
 	action <- getLine
-
+	
 	-- choose action
-	let doAction | action == "1" = prettyPrint network
+	let doAction | action == "1" = prettyPrint goodNet
 				 | action == "2" = dummyAction
 				 | action == "3" = dummyAction
 				 | action == "4" = onWork goodNet
@@ -83,7 +90,7 @@ menuLoop network goodNet = do
 	-- invoke action
 	doAction
 	if action /= "0"
-		then menuLoop network goodNet
+		then menuLoop goodNet
 		else putStrLn "\nGoodbye!"
 
 	
@@ -109,23 +116,35 @@ onWork :: Network -> IO ()
 onWork net = do
 	printf "\n[work] please enter some ann input (e.g: 1 0): \n"
 	inputStr <- getLine
+	-- TODO: check input for numbers or/and catch exception	
 	let values = map (\w -> read w::Double) (words inputStr)
-	print values	
-	print $ work net values 
+	
+	if length values == 0
+		then return()	-- leave onWork loop
+		else do
+			 putStrLn "please wait..."
+			 print $ work net values
+			 onWork net					-- stay in onWork loop
 
 dummyAction :: IO()
 dummyAction = do
 	putStrLn "\nOooops! This action is not implemented yet.\n"
 
-
-initNetwork :: String -> IO Network
-initNetwork filename = do
+-- wrapps initNetwork to generate the network from file instead from string.
+initNetworkFromFile :: String -> IO Network
+initNetworkFromFile filename = do
 	input <- readFile filename
+	initNetwork input
+
+-- generates a network from input string
+initNetwork :: String -> IO Network
+initNetwork input = do
+	--input <- readFile filename
 	randNums <- mapM (\x -> getRandNum) [1..countNeededRandNums input]
 	let net = getTopology input randNums
 	; return net
 
-		
+	
 initTraindata :: String -> IO Trainingdata
 initTraindata filename = do
 	input <- readFile filename
