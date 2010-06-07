@@ -53,11 +53,7 @@ main menu = shows after every action
 --}
 
 
-getDefaultTopology :: String
-getDefaultTopology = "../data/topology"
 
-getDefaultTrainData :: String
-getDefaultTrainData = "../data/trainingdata"	-- XOR training-file
 
 main = do
 	-- TODO add main parameter for topology and traindata file
@@ -68,10 +64,10 @@ main = do
 
 	-- init network
 	--network <- initNetwork  "2b\n2b\n1\n"
-	network <- initNetworkFromFile  "../data/topology" -- XOR training-file
+	network <- initNetworkFromFile (dataPath ++ "topology") -- XOR training-file
 	
 	-- train network
-	let goodNet = trainNet network tdata 10000 -- (* 4 learnsteps)
+	let goodNet = trainNet network tdata 1000 -- (* 4 learnsteps)
 	
 	-- start menu loop
 	menuLoop goodNet
