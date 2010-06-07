@@ -61,13 +61,14 @@ getDefaultTrainData = "../data/trainingdata"	-- XOR training-file
 
 main = do
 	-- TODO add main parameter for topology and traindata file
+	-- TODO: a batch file instead/alternative to onWork
 
 	-- init traindata
 	tdata <- initTraindata (dataPath ++ "trainingdata")
 
 	-- init network
 	--network <- initNetwork  "2b\n2b\n1\n"
-	network <- initNetwork  (dataPath ++ "topology") -- XOR training-file
+	network <- initNetworkFromFile  "../data/topology" -- XOR training-file
 	
 	-- train network
 	let goodNet = trainNet network tdata 10000 -- (* 4 learnsteps)
@@ -124,7 +125,11 @@ onWork net = do
 		then return()	-- leave onWork loop
 		else do
 			 putStrLn "please wait..."
-			 print $ work net values
+			 let resultList = work net values
+			 putStr "["
+			 mapM_ (\v -> printf "%.3f " v) resultList
+			 putStr "]"			 
+			 --print $ work net values
 			 onWork net					-- stay in onWork loop
 
 dummyAction :: IO()

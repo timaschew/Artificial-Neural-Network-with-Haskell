@@ -102,7 +102,7 @@ buildNeuronStr layerIdx neuronIdx (n:nList) r1 r2 = buildNeuronStr layerIdx next
 	where
 	nextIdx = neuronIdx + 1
 	neuronStr = printf "N[%d][%d]" (layerIdx::Int) (neuronIdx::Int)
-	stateStr = printf "%f" ((state n) :: Double)
+	stateStr = printf "%.3f" ((state n) :: Double)
 	tmp1 = r1 ++ [neuronStr]
 	tmp2 = r2 ++ [stateStr]
 

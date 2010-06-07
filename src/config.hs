@@ -1,4 +1,4 @@
 module Config where
 
-projectPath = "/Users/thunder/Documents/workspaces/haskell/FirstHaskell/"
+projectPath = "~/projects/uni/haskell/Artificial-Neural-Network-with-Haskell/"
 dataPath = "data/"

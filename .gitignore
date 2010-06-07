@@ -13,3 +13,5 @@ src/Main.hp
 src/Main.ps
 src/Utils.hi
 src/Utils.o
+src/Config.hs
+src/config.hs
