@@ -52,6 +52,46 @@ main menu = shows after every action
 
 --}
 
+
+-- 5x7 Letters [A..Z]
+alpha = do
+	az <- readFile (dataPath ++ "traindata/img/raw/alphabet")
+	let list = map (\l -> words l) (lines az)
+	
+	-- inputvalues: list of letter lists
+	let az = splitAlphas list [] []
+
+	-- TODO: finish test
+
+	print az
+	
+	
+
+-- split all letter lines containing list by the comment line 
+-- a letter is described by a list of lines
+splitAlphas :: [[String]] -> [[Int]] -> [[[Int]]] -> [[[Int]]]
+splitAlphas [] [] res = res
+splitAlphas [] (_:_) res = res
+splitAlphas (l:ll) letter res = splitAlphas ll letter' res' where
+	newLetter | length l > 0 && head (head l) == '-' = True
+		      | otherwise = False
+
+	lastElem | length ll == 0 = True
+			 | otherwise = False
+
+	-- letter finished?
+	res' | (newLetter || lastElem) && length letter > 0 = res ++ [letter]
+		 | otherwise = res
+
+	lInt = map (\s -> read s ::Int ) l 
+
+	-- line belongs to current letter?
+	letter' | newLetter || lastElem = []
+			| length l == 0 = letter		-- skip empty line
+			| otherwise = letter ++ [lInt]
+
+
+
 point = do
 	let a1 = [1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0]
 	let a2 = [0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0,0]
