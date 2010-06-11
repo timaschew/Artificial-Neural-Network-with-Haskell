@@ -38,20 +38,10 @@ Questions / Rules for mapping strings on neurons
 -- text network 19 input neurons max of en/de word length
 
 {--
+	
 	-- workflow to test text training
-	input <- readFile "data/traindata/txt/de_en_01.train"
-	-- file has 2546 words
-	let td = getTrainingdata input 2546
-	-- or alternating trainingdata
-	let td2 = makeAlterningTrainingdata input 2546
-	
-	let goodNet = trainNet network 10 td
-	
-	-- string: "laune"
-	demo goodNet [108,97,117,110,101]
-	
-	-- string: "empty"
-	demo goodNet [101,109,112,116,121]
+	input <- readFile "data/trainingdata/txt/de_en_02.train"
+	let td = getTrainingdata input 10
 --}
 
 b1_0 = biasNeuron 

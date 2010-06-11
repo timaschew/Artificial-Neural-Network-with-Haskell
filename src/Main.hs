@@ -52,7 +52,6 @@ main menu = shows after every action
 
 --}
 
-
 point = do
 	let a1 = [1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0]
 	let a2 = [0,0,0,0,0,1,1,1,0,0,1,1,1,0,0,1,1,1,0,0,0,0,0,0,0]
@@ -170,7 +169,6 @@ triangle = do
 	print $ work goodNet t3
 	print $ work goodNet q
 	print $ work goodNet c
-	
 
 main = do
 	-- TODO add main parameter for topology and traindata file
@@ -181,10 +179,10 @@ main = do
 
 	-- init network
 	--network <- initNetwork  "2b\n2b\n1\n"
-	network <- initNetworkFromFile  "../data/topology" -- XOR training-file
+	network <- initNetworkFromFile (dataPath ++ "topology") -- XOR training-file
 	
 	-- train network
-	let goodNet = trainNet network tdata 5000 -- (* 4 learnsteps)
+	let goodNet = trainNet network tdata 1000 -- (* 4 learnsteps)
 	
 	-- start menu loop
 	menuLoop goodNet
