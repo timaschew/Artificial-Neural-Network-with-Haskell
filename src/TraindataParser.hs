@@ -5,19 +5,6 @@ import Data.List
 import Trainingdata
 import Config
 
-testTrain :: IO ()
-testTrain = do
-	-- read files
-	input <- readFile (dataPath ++ "traindata/txt/de_01.train")
-	
-	putStrLn "parsing traindata file..."
-	
-	let traindata = parseTrainData (lines input) [] []
-	let inputList = fst traindata	-- [[input1],[input2],...]
-	let outputList = snd traindata	-- [[output1],[output2],...]
-
-	putStrLn "Done."
-
 	
 -- input is the file input (whole string)
 getTrainingdata :: String -> Int -> Trainingdata

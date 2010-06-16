@@ -1,24 +1,10 @@
 module TopologyParser where
 import Neuron
 import Config
-import Utils
 import Data.Char
 import Data.List
 import Data.List.Split
 import Random
-
-
--- read in the topology file and do a prettyPrint on console
-testTopo = do
-	-- read file
-	input <- readFile (dataPath ++ "topology")
-	
-	putStrLn "parsing topology file..."
-	randNums <- mapM (\x -> getRandNum) [1..countNeededRandNums input]
-	let topology = getTopology input randNums
-	putStrLn "Done."
-	prettyPrint topology
-
 
 
 -- returns a random number in range (-1.0 to 1.0)

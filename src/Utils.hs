@@ -5,8 +5,15 @@ TODO:  clean up the print functions
 --}
 
 module Utils where
+
 import Neuron
+import Trainingdata
+import Backpropagation
+import TopologyParser
+import TraindataParser
+import Config
 import Control.Monad
+import System.Environment
 import Text.Printf
 
 -- print states of a layer
@@ -153,3 +160,85 @@ concateNeuronStr maxNeurons nStrList sStrList = result
 
 buildSpacer :: Int -> String
 buildSpacer size = concat (replicate size " ")
+
+-- wrapps initNetwork to generate the network from file instead from string.
+initNetworkFromFile :: String -> IO Network
+initNetworkFromFile filename = do
+	input <- readFile filename
+	initNetwork input
+
+-- generates a network from input string
+initNetwork :: String -> IO Network
+initNetwork input = do
+	--input <- readFile filename
+	randNums <- mapM (\x -> getRandNum) [1..countNeededRandNums input]
+	let net = getTopology input randNums
+	; return net
+
+	
+initTraindata :: String -> IO Trainingdata
+initTraindata filename = do
+	input <- readFile filename
+	let tdata = getTrainingdata input 4
+	; return tdata
+
+-- let train the net <steps> times
+-- the function / algorithm is very slow :(
+-- 5000 * 4 steps ~ 16 seconds (on a macbook 2GHz)
+trainNet :: Network -> Trainingdata -> Int -> Network
+trainNet net tdata 0 = {-# SCC "trainNet" #-} net
+trainNet net tdata steps = trainNet trained tdata (steps-1) where
+	trained = genericTraining net tdata 0
+	
+showError net = do
+	let outputLayer = last net
+	let l = map delta outputLayer
+	putStr "["
+	mapM_ (\v -> printf "%.3f " v) l
+	putStr "]"
+	putStrLn ""
+
+-- how to use:
+-- call 'work goodNet [1,0]' for showing result for the given input
+work :: Network -> TrainData -> [Double]
+work net inputData = result where
+	inputted = setTrainToInputLayer net inputData
+	forwarded = forwardPass inputted []
+	result = makeStateListOfLayer (last forwarded) []
+
+-- 5x7 Letters [A..Z]
+alpha = do
+	az <- readFile (dataPath ++ "traindata/img/raw/alphabet")
+	let list = map (\l -> words l) (lines az)
+	
+	-- inputvalues: list of letter lists
+	let az = splitAlphas list [] []
+
+	-- TODO: finish test
+
+	print az
+	
+	
+
+-- split all letter lines containing list by the comment line 
+-- a letter is described by a list of lines
+splitAlphas :: [[String]] -> [[Int]] -> [[[Int]]] -> [[[Int]]]
+splitAlphas [] [] res = res
+splitAlphas [] (_:_) res = res
+splitAlphas (l:ll) letter res = splitAlphas ll letter' res' where
+	newLetter | length l > 0 && head (head l) == '-' = True
+		      | otherwise = False
+
+	lastElem | length ll == 0 = True
+			 | otherwise = False
+
+	-- letter finished?
+	res' | (newLetter || lastElem) && length letter > 0 = res ++ [letter]
+		 | otherwise = res
+
+	lInt = map (\s -> read s ::Int ) l 
+
+	-- line belongs to current letter?
+	letter' | newLetter || lastElem = []
+			| length l == 0 = letter		-- skip empty line
+			| otherwise = letter ++ [lInt]
