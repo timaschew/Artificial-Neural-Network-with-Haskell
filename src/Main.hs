@@ -53,7 +53,8 @@ test xs = sum xs
 
 universalUseCase net action = do
 	pureNet <- net
-	--saveWeights net action -DONT WORK !ARWGHHGHGH !!
+	let a = saveWeights pureNet action
+	a
 	showError pureNet
 
 xorExample steps = do
