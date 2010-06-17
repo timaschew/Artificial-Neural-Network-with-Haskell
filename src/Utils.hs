@@ -29,6 +29,15 @@ showError net = do
 	putStr "]"
 	putStrLn ""
 
+showOutput :: Network -> TrainData -> IO ()
+showOutput net  train = do
+	let l = work net train
+	putStr "["
+	mapM_ (\v -> printf "%.3f " v) l
+	putStr "]"
+	putStrLn ""
+	
+	
 -- print states of a layer
 printState :: [Neuron] -> IO()
 printState neuronList = do
@@ -244,6 +253,27 @@ work net inputData = result where
 	inputted = setTrainToInputLayer net inputData
 	forwarded = forwardPass inputted []
 	result = makeStateListOfLayer (last forwarded) []
+
+
+dec2bin = map i2c . reverse . unfoldr decomp
+    where decomp n = if n == 0 then Nothing else Just(n `mod` 2, n `div` 2)
+          i2c i = if i == 0 then '0' else '1'
+          
+dec2binLeading :: Int -> Int -> [String]
+dec2binLeading x num = tmp where
+	y = dec2bin x
+	repList = repeat 0
+	remainingNumbers = num - (length y)
+	list1 = take remainingNumbers repList
+	list2 = map int2Str list1
+	list3 = map makeString y
+	tmp 	| (length y <= num) = list2 ++ list3
+		| otherwise = list2
+		
+int2Str x = show x
+
+makeString :: Char -> String
+makeString x = [x]
 
 
 -- bitmap parser	

@@ -1,7 +1,7 @@
 
 module GraphicInterface where
 
-import Ppm
+
 
 {--
 example path: "data/traindata/img/10_12/big_numbers/0.pgm"

@@ -178,26 +178,7 @@ soundexToBitStream (c, i1, i2, i3) = tmp where
 	bin4 = dec2binLeading i3 3
 	tmp = unwords (bin1 ++ bin2 ++ bin3 ++ bin4)
 
-dec2binLeading :: Int -> Int -> [String]
-dec2binLeading x num = tmp where
-	y = dec2bin x
-	repList = repeat 0
-	remainingNumbers = num - (length y)
-	list1 = take remainingNumbers repList
-	list2 = map int2Str list1
-	list3 = map makeString y
-	tmp 	| (length y <= num) = list2 ++ list3
-		| otherwise = list2
 
-makeString :: Char -> String
-makeString x = [x]
-
-int2Str x = show x
-
-dec2bin = map i2c . reverse . unfoldr decomp
-    where decomp n = if n == 0 then Nothing else Just(n `mod` 2, n `div` 2)
-          i2c i = if i == 0 then '0' else '1'
-	
 -- ignore all chars except a-z and white spaces
 filterRealChars :: String -> String
 filterRealChars s = stripNotRealChars where
