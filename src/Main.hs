@@ -34,11 +34,28 @@ showOutput 'network' 'traindata' :: [Double]
 --}
 
 main = do
-	net <- (xorExample 0)
-	
-	showError net
+	args <- getArgs
 
-xorExample 0 = xorExample 2000
+	let usecase = (args !! 0)
+	let steps	| (length args >= 2) = readI (args !! 1)
+			| otherwise = 100
+	let saveAction	| (length args == 3) = (args !! 2)
+			| otherwise = ""
+			
+	--putStrLn (usecase ++ " - " ++ (show steps))
+	case (args !! 0) of
+		"pgm1" -> universalUseCase (staticPPMexample steps) saveAction
+		"xor" -> universalUseCase (xorExample steps) saveAction
+	
+	
+test :: [Double] -> Double
+test xs = sum xs
+
+universalUseCase net action = do
+	pureNet <- net
+	--saveWeights net action -DONT WORK !ARWGHHGHGH !!
+	showError pureNet
+
 xorExample steps = do
 	net <- initNetworkFromFile (dataPath ++ "traindata/xor/topology")
 	tdata <- initTraindata (dataPath ++ "traindata/xor/trainingdata")
@@ -75,6 +92,7 @@ staticPPMexample steps = do
 	net <- initNetwork "120b\n12b\n10"
 	let trainedNet = trainNet net tdata steps
 	return trainedNet
-	
+
+
 anotherExample = do
 	putStrLn "example"

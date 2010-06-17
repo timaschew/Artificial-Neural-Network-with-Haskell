@@ -234,7 +234,7 @@ initNetwork input = do
 initTraindata :: String -> IO Trainingdata
 initTraindata filename = do
 	input <- readFile filename
-	let tdata = getTrainingdata input (length input)
+	let tdata = getTrainingdata input
 	; return tdata
 
 -- let train the net <steps> times
@@ -275,6 +275,48 @@ int2Str x = show x
 makeString :: Char -> String
 makeString x = [x]
 
+
+-- DB function - save weights
+
+saveWeights net "" = do
+	writeFile "/dev/null" "nothing"
+saveWeights net fn = do
+	let s = net2weightsString (tail net) (head net) []
+	let sizeList = ("# " ++ unwords (map show (map length net)))
+	writeFile fn (unlines ([sizeList] ++ s))
+
+net2weightsString :: Network -> [Neuron] -> [String] -> [String]
+net2weightsString [] prevLayer c = c
+net2weightsString (l:rest) prevLayer c = net2weightsString rest l tmp where
+	prevNeurons = length prevLayer
+	weights = neurons2weightsString l []
+	tmp = c ++ ["# " ++ (show prevNeurons) ++ " " ++ (show (length l))] ++ weights
+
+neurons2weightsString [] c = c
+neurons2weightsString (n:layer) c = neurons2weightsString layer tmp where
+	tmp = c ++ [doubleList2String (weights n)]
+
+
+doubleList2String l = tmp where
+	sl = map show l
+	tmp = unwords sl
+	
+	
+-- DB function - load weights
+
+--loadWeights :: String -> IO Network
+loadWeights fn = do
+	input <- readFile fn
+	let inp = lines input
+	let s = head inp -- 10 3 => 10 input neurons
+	let inputSize = readI ((words s) !! 0)
+	putStrLn ("" ++ (show inputSize))
+	--let r = string2Net inp
+	--return ""
+	
+--string2Net inp = tmp where
+	
+readI x = read x :: Int
 
 -- bitmap parser	
 -- method reads a file containing multiple bitmap pictures (separated by a comment line)

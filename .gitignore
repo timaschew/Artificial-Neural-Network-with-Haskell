@@ -15,3 +15,14 @@ src/Utils.hi
 src/Utils.o
 src/Config.hs
 src/config.hs
+src/Config.hi
+src/Config.o
+src/GraphicInterface.hi
+src/GraphicInterface.o
+src/Menu.hi
+src/Menu.o
+src/TopologyParser.hi
+src/TopologyParser.o
+src/TraindataParser.hi
+src/TraindataParser.o
+
