@@ -7,12 +7,12 @@ import Config
 
 	
 -- input is the file input (whole string)
-getTrainingdata :: String -> Int -> Trainingdata
-getTrainingdata input steps = result where
+getTrainingdata :: String -> Trainingdata
+getTrainingdata input = result where
 	tupel = parseTrainData (lines input) [] []
 	ti = map (\x -> makeDoubleList x) (fst tupel)
 	to = map (\x -> makeDoubleList x) (snd tupel)
-	result = Trainingdata steps ti to
+	result = Trainingdata (length ti) ti to
 
 -- input is the file input (whole string)
 makeAlterningTrainingdata :: String -> Int -> Trainingdata
