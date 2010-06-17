@@ -15,6 +15,19 @@ import Config
 import Control.Monad
 import System.Environment
 import Text.Printf
+import System.Directory
+import Data.List
+
+{----------------------------------------------------------------------
+	Print Utils
+----------------------------------------------------------------------}
+showError net = do
+	let outputLayer = last net
+	let l = map delta outputLayer
+	putStr "["
+	mapM_ (\v -> printf "%.3f " v) l
+	putStr "]"
+	putStrLn ""
 
 -- print states of a layer
 printState :: [Neuron] -> IO()
@@ -161,11 +174,44 @@ concateNeuronStr maxNeurons nStrList sStrList = result
 buildSpacer :: Int -> String
 buildSpacer size = concat (replicate size " ")
 
+
+{----------------------------------------------------------------------
+	Helper Methods
+----------------------------------------------------------------------}
 -- wrapps initNetwork to generate the network from file instead from string.
 initNetworkFromFile :: String -> IO Network
 initNetworkFromFile filename = do
 	input <- readFile filename
 	initNetwork input
+
+-- generates the network out of the ppm dimensions.
+-- TODO: share some code / reduce duplication with Graphicinterface.hs
+-- TODO: does not work with ppm (output layer size unknown). Maybe the number of ppm files in directory can represent the output layer length?!
+initNetworkFromImgDim :: String -> IO Network
+initNetworkFromImgDim filename = do
+	input <-readFile filename
+	let lineList = lines input
+	let dim = words (lineList !! 1)
+	let x = read (dim !! 0) :: Int
+	let y = read (dim !! 1) :: Int
+	
+	let inputLen = x*y
+	let hiddenLen = 10
+	let outputLen = 10
+	initNetwork (show inputLen ++ "\n" ++ show hiddenLen ++ "\n" ++ show outputLen ++ "\n")
+
+-- builds a mathing Network for the Trainingdata. 
+-- The hiddenlayer is set automatically to half size of input length but max 15 neurons and at least 2, bias set default
+initNetworkFromTdata :: Trainingdata -> IO Network
+initNetworkFromTdata tdata = do
+--initNetworkFromTdata ioTdata = do
+	--tdata <- ioTdata
+	let inputLen = length $ head (inputs tdata)		-- get size of one input
+	let outputLen = length $ head (outputs tdata)	-- get size of one output
+	let hiddenLen | inputLen > 30 = 15	-- max
+				  | inputLen <= 2 = 2	-- min
+				  | otherwise = ceiling (fromIntegral inputLen / 2)
+	initNetwork (show inputLen ++ "b\n" ++ show hiddenLen ++ "b\n" ++ show outputLen ++ "\n")
 
 -- generates a network from input string
 initNetwork :: String -> IO Network
@@ -179,7 +225,7 @@ initNetwork input = do
 initTraindata :: String -> IO Trainingdata
 initTraindata filename = do
 	input <- readFile filename
-	let tdata = getTrainingdata input 4
+	let tdata = getTrainingdata input (length input)
 	; return tdata
 
 -- let train the net <steps> times
@@ -190,13 +236,6 @@ trainNet net tdata 0 = {-# SCC "trainNet" #-} net
 trainNet net tdata steps = trainNet trained tdata (steps-1) where
 	trained = genericTraining net tdata 0
 	
-showError net = do
-	let outputLayer = last net
-	let l = map delta outputLayer
-	putStr "["
-	mapM_ (\v -> printf "%.3f " v) l
-	putStr "]"
-	putStrLn ""
 
 -- how to use:
 -- call 'work goodNet [1,0]' for showing result for the given input
@@ -206,23 +245,12 @@ work net inputData = result where
 	forwarded = forwardPass inputted []
 	result = makeStateListOfLayer (last forwarded) []
 
--- 5x7 Letters [A..Z]
-alpha = do
-	az <- readFile (dataPath ++ "traindata/img/raw/alphabet")
-	let list = map (\l -> words l) (lines az)
-	
-	-- inputvalues: list of letter lists
-	let az = splitAlphas list [] []
 
-	-- TODO: finish test
-
-	print az
-	
-	
-
--- split all letter lines containing list by the comment line 
--- a letter is described by a list of lines
-splitAlphas :: [[String]] -> [[Int]] -> [[[Int]]] -> [[[Int]]]
+-- bitmap parser	
+-- method reads a file containing multiple bitmap pictures (separated by a comment line)
+-- and splits them into a list of bitmaps
+-- for example a letter bitmap is described by a list of lines
+splitAlphas :: [[String]] -> [[Double]] -> [[[Double]]] -> [[[Double]]]
 splitAlphas [] [] res = res
 splitAlphas [] (_:_) res = res
 splitAlphas (l:ll) letter res = splitAlphas ll letter' res' where
@@ -236,9 +264,46 @@ splitAlphas (l:ll) letter res = splitAlphas ll letter' res' where
 	res' | (newLetter || lastElem) && length letter > 0 = res ++ [letter]
 		 | otherwise = res
 
-	lInt = map (\s -> read s ::Int ) l 
+	lInt = map (\s -> read s ::Double ) l 
 
 	-- line belongs to current letter?
 	letter' | newLetter || lastElem = []
 			| length l == 0 = letter		-- skip empty line
 			| otherwise = letter ++ [lInt]
+
+
+-- scans a directory for ppm files and returns a list of their filenames
+getPgmList :: String -> IO [String]
+getPgmList path = do
+	dirContent <- getDirectoryContents path
+	let pgmList = filter (isSuffixOf ".pgm") dirContent
+	return pgmList
+	
+	
+------------------------------------------------------------------------	
+-- TODO: delete tests later	
+------------------------------------------------------------------------
+-- 5x7 Letters [A..Z]
+alpha = do
+	az <- readFile (dataPath ++ "traindata/img/raw/alphabet")
+	let list = map (\l -> words l) (lines az)
+	
+	-- inputvalues: list of letter lists
+	let az = splitAlphas list [] []
+
+	-- TODO: finish test
+	print az
+
+
+dirTest = getPgmList (dataPath ++ "traindata/img/10_12/big_numbers")
+
+netTest = do
+	fileList <- getPgmList (dataPath ++ "traindata/img/10_12/big_numbers")
+	net <- initNetworkFromImgDim (dataPath ++ "traindata/img/10_12/big_numbers/" ++ head fileList)	-- take first found file
+	prettyPrint net
+
+-- build net from XOR traindata
+netTest2 = do
+	tdata <- initTraindata (dataPath ++ "traindata/xor/trainingdata")
+	net <- initNetworkFromTdata tdata
+	prettyPrint net
