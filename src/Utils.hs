@@ -11,6 +11,7 @@ import Trainingdata
 import Backpropagation
 import TopologyParser
 import TraindataParser
+import GraphicInterface
 import Config
 import Control.Monad
 import System.Environment
@@ -193,23 +194,6 @@ initNetworkFromFile filename = do
 	input <- readFile filename
 	initNetwork input
 
--- generates the network out of the ppm dimensions.
--- TODO: share some code / reduce duplication with Graphicinterface.hs
--- TODO: does not work with ppm (output layer size unknown). Maybe the number of ppm files in directory can represent the output layer length?!
-initNetworkFromImgDim :: String -> IO Network
-initNetworkFromImgDim filename = do
-	input <-readFile filename
-	let lineList = lines input
-	let dim = words (lineList !! 1)
-	let x = read (dim !! 0) :: Int
-	let y = read (dim !! 1) :: Int
-	
-	let inputLen = x*y
-	let hiddenLen = 10
-	let outputLen = 10
-	initNetwork (show inputLen ++ "\n" ++ show hiddenLen ++ "\n" ++ show outputLen ++ "\n")
-
--- builds a mathing Network for the Trainingdata. 
 -- The hiddenlayer is set automatically to half size of input length but max 15 neurons and at least 2, bias set default
 initNetworkFromTdata :: Trainingdata -> IO Network
 initNetworkFromTdata tdata = do
@@ -318,30 +302,25 @@ loadWeights fn = do
 	
 readI x = read x :: Int
 
--- bitmap parser	
--- method reads a file containing multiple bitmap pictures (separated by a comment line)
--- and splits them into a list of bitmaps
--- for example a letter bitmap is described by a list of lines
-splitAlphas :: [[String]] -> [[Double]] -> [[[Double]]] -> [[[Double]]]
-splitAlphas [] [] res = res
-splitAlphas [] (_:_) res = res
-splitAlphas (l:ll) letter res = splitAlphas ll letter' res' where
-	newLetter | length l > 0 && head (head l) == '-' = True
-		      | otherwise = False
 
-	lastElem | length ll == 0 = True
-			 | otherwise = False
+-- generates a Trainingsdata from the ppm of the given directory
+dirToTrainData :: String -> IO Trainingdata
+dirToTrainData path = do
+	inputValues <- getPPMInput path
+	let outputValues = getOutputMatrix (length inputValues)
+	let tdata = Trainingdata (length inputValues) inputValues outputValues
+	return tdata
 
-	-- letter finished?
-	res' | (newLetter || lastElem) && length letter > 0 = res ++ [letter]
-		 | otherwise = res
-
-	lInt = map (\s -> read s ::Double ) l 
-
-	-- line belongs to current letter?
-	letter' | newLetter || lastElem = []
-			| length l == 0 = letter		-- skip empty line
-			| otherwise = letter ++ [lInt]
+	
+-- returns a list of inputvalues from the given ppm folder.
+-- reads every ppm and generates its inputValues from the pixels values
+getPPMInput :: String -> IO [[Double]]
+getPPMInput path = do
+	let fullPath = dataPath ++ path
+	nameList <- getPgmList fullPath
+	fileList <- mapM readPPMFile (map (\x -> fullPath ++ x) nameList)
+	
+	return fileList
 
 
 -- scans a directory for ppm files and returns a list of their filenames
@@ -351,31 +330,6 @@ getPgmList path = do
 	let pgmList = filter (isSuffixOf ".pgm") dirContent
 	return pgmList
 	
-	
-------------------------------------------------------------------------	
--- TODO: delete tests later	
-------------------------------------------------------------------------
--- 5x7 Letters [A..Z]
-alpha = do
-	az <- readFile (dataPath ++ "traindata/img/raw/alphabet")
-	let list = map (\l -> words l) (lines az)
-	
-	-- inputvalues: list of letter lists
-	let az = splitAlphas list [] []
-
-	-- TODO: finish test
-	print az
-
-
-dirTest = getPgmList (dataPath ++ "traindata/img/10_12/big_numbers")
-
-netTest = do
-	fileList <- getPgmList (dataPath ++ "traindata/img/10_12/big_numbers")
-	net <- initNetworkFromImgDim (dataPath ++ "traindata/img/10_12/big_numbers/" ++ head fileList)	-- take first found file
-	prettyPrint net
-
--- build net from XOR traindata
-netTest2 = do
-	tdata <- initTraindata (dataPath ++ "traindata/xor/trainingdata")
-	net <- initNetworkFromTdata tdata
-	prettyPrint net
+-- returns the output values list (n x n identity matrix)
+getOutputMatrix :: Int -> [[Double]]
+getOutputMatrix n = map (\x-> map (\y-> if y == x then 1.0 else 0.0) [1..n]) [1..n]

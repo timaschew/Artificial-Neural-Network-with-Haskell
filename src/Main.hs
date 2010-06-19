@@ -19,6 +19,7 @@ import GraphicInterface
 import Text.Printf
 import Data.Char
 import System.Environment
+import Control.Monad
 
 {--
 
@@ -77,18 +78,10 @@ staticPPMexample steps = do
 	in8 <- readPPMFile (path ++ "8_b.pgm")
 	in9 <- readPPMFile (path ++ "9_b.pgm")
 	
-	let out0 = [1,0,0,0,0,0,0,0,0,0]
-	let out1 = [0,1,0,0,0,0,0,0,0,0]
-	let out2 = [0,0,1,0,0,0,0,0,0,0]
-	let out3 = [0,0,0,1,0,0,0,0,0,0]
-	let out4 = [0,0,0,0,1,0,0,0,0,0]
-	let out5 = [0,0,0,0,0,1,0,0,0,0]
-	let out6 = [0,0,0,0,0,0,1,0,0,0]
-	let out7 = [0,0,0,0,0,0,0,1,0,0]
-	let out8 = [0,0,0,0,0,0,0,0,1,0]
-	let out9 = [0,0,0,0,0,0,0,0,0,1]
+	let inputValues = [in0,in1,in2,in3,in4,in5,in6,in7,in8,in9]
+	let outputValues = getOutputMatrix (length inputValues)
 	
-	let tdata = Trainingdata 10 [in0,in1,in2,in3,in4,in5,in6,in7,in8,in9] [out0,out1,out2,out3,out4,out5,out6,out7,out8,out9]
+	let tdata = Trainingdata (length inputValues) inputValues outputValues
 	-- input neurons 10 x 12 = 120
 	net <- initNetwork "120b\n12b\n10"
 	let trainedNet = trainNet net tdata steps
@@ -97,3 +90,11 @@ staticPPMexample steps = do
 
 anotherExample = do
 	putStrLn "example"
+
+timesPPMexample :: Int -> IO Network
+timesPPMexample steps = do
+	let path = dataPath ++ "traindata/img/10_12_times/big_numbers/"
+	tdata <- dirToTrainData path
+	net <- initNetworkFromTdata tdata
+	
+	return (trainNet net tdata steps)
