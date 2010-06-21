@@ -19,6 +19,7 @@ import GraphicInterface
 import Text.Printf
 import Data.Char
 import System.Environment
+import Control.Monad
 
 {--
 
@@ -49,6 +50,8 @@ main = do
 	case (args !! 0) of
 		"pgm1" -> universalUseCase (staticPPMexample steps) saveAction
 		"xor" -> universalUseCase (xorExample steps) saveAction
+		"num" -> universalUseCase (numberPPMexample steps) saveAction
+		"na" -> universalUseCase (numAlphaPPMexample steps) saveAction
 	
 
 
@@ -82,18 +85,10 @@ staticPPMexample steps = do
 	in8 <- readPPMFile (path ++ "8.pgm")
 	in9 <- readPPMFile (path ++ "9.pgm")
 	
-	let out0 = [1,0,0,0,0,0,0,0,0,0]
-	let out1 = [0,1,0,0,0,0,0,0,0,0]
-	let out2 = [0,0,1,0,0,0,0,0,0,0]
-	let out3 = [0,0,0,1,0,0,0,0,0,0]
-	let out4 = [0,0,0,0,1,0,0,0,0,0]
-	let out5 = [0,0,0,0,0,1,0,0,0,0]
-	let out6 = [0,0,0,0,0,0,1,0,0,0]
-	let out7 = [0,0,0,0,0,0,0,1,0,0]
-	let out8 = [0,0,0,0,0,0,0,0,1,0]
-	let out9 = [0,0,0,0,0,0,0,0,0,1]
+	let inputValues = [in0,in1,in2,in3,in4,in5,in6,in7,in8,in9]
+	let outputValues = getOutputMatrix (length inputValues)
 	
-	let tdata = Trainingdata 10 [in0,in1,in2,in3,in4,in5,in6,in7,in8,in9] [out0,out1,out2,out3,out4,out5,out6,out7,out8,out9]
+	let tdata = Trainingdata (length inputValues) inputValues outputValues
 	-- input neurons 10 x 12 = 120
 	--net <- initNetwork "374b\n10b\n10"
 	let net = nnet
@@ -106,3 +101,49 @@ showOutputFor net path = do
 
 anotherExample = do
 	putStrLn "example"
+
+
+demo = do
+	i1 <- readPPMFile (dataPath ++ "traindata/img/10_12_times/big_numbers/1_b.pgm")
+	i1' <- readPPMFile (dataPath ++ "traindata/img/10_12_times/1.pgm")
+	j1 <- readPPMFile (dataPath ++ "traindata/img/10_12_lucida/big_numbers/1_b.pgm")
+	i8 <- readPPMFile (dataPath ++ "traindata/img/10_12_times/big_numbers/8_b.pgm")
+	i9 <- readPPMFile (dataPath ++ "traindata/img/10_12_times/big_numbers/9_b.pgm")
+	j8 <- readPPMFile (dataPath ++ "traindata/img/10_12_lucida/big_numbers/8_b.pgm")
+	j9 <- readPPMFile (dataPath ++ "traindata/img/10_12_lucida/big_numbers/9_b.pgm")
+	goodNet <- numberPPMexample 100
+	--goodNet <- staticPPMexample 100
+	--goodNet <- loadWeights "../pgm_net_weights_2000"
+	
+	showOutput goodNet i1
+	showOutput goodNet i1'
+	showOutput goodNet j1
+	showOutput goodNet i8
+	showOutput goodNet i9
+	showOutput goodNet j8
+	showOutput goodNet j9
+	
+demo2 = do
+	ia <- readPPMFile (dataPath ++ "traindata/img/10_12_times/A.pgm")
+	i1 <- readPPMFile (dataPath ++ "traindata/img/10_12_times/1.pgm")
+	goodNet <- numAlphaPPMexample 200
+		
+	showOutput goodNet ia
+	showOutput goodNet i1
+	
+
+numberPPMexample :: Int -> IO Network
+numberPPMexample steps = do
+	let path = dataPath ++ "traindata/img/10_12_times/big_numbers/"
+	tdata <- dirToTrainData path
+	net <- initNetworkFromTdata tdata
+	
+	return (trainNet net tdata steps)
+
+numAlphaPPMexample :: Int -> IO Network
+numAlphaPPMexample steps = do
+	let path = dataPath ++ "traindata/img/10_12_times/"
+	tdata <- dirToTrainData path
+	net <- initNetworkFromTdata tdata
+	
+	return (trainNet net tdata steps)
