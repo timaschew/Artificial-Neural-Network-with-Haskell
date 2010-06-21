@@ -293,8 +293,29 @@ loadWeights fn = do
 	input <- readFile fn
 	let inp = lines input
 	let s = head inp -- 10 3 => 10 input neurons
-	let inputSize = readI ((words s) !! 0)
-	putStrLn ("" ++ (show inputSize))
+	let inputSize = readI ((words s) !! 1)	-- '#' is !! 0
+	--putStrLn ("" ++ (show inputSize))
+	
+	-- TODO: test if the loaded network is the same.
+	-- only for 3layer nets
+	let hiddenSize = readI ((words s) !! 2)
+	let outputSize = readI ((words s) !! 3)
+	
+	let inputW = map (\x -> map (\w -> read w ::Double) (words x)) $ take hiddenSize (drop 2 inp)
+	let hiddenW = map (\x -> map (\w -> read w ::Double) (words x)) $ take outputSize (drop (3 + length inputW) inp)
+	
+	let inputLayer = map (\x -> defaultNeuron) [1..inputSize]
+	let hiddenLayer = map (\x -> defaultNeuron {weights = x})  inputW
+	let outputLayer = map (\x -> defaultNeuron {weights = x})  hiddenW
+	
+	let net = [inputLayer, hiddenLayer, outputLayer]
+	
+	return net
+	
+	--
+	--
+	
+	
 	--let r = string2Net inp
 	--return ""
 	
@@ -328,7 +349,7 @@ getPgmList :: String -> IO [String]
 getPgmList path = do
 	dirContent <- getDirectoryContents path
 	let pgmList = filter (isSuffixOf ".pgm") dirContent
-	return pgmList
+	return $ sort pgmList
 	
 -- returns the output values list (n x n identity matrix)
 getOutputMatrix :: Int -> [[Double]]
