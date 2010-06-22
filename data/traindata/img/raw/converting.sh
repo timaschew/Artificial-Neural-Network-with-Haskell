@@ -12,7 +12,8 @@ srcdir=$1
 outputdir=$4
 mkdir $outputdir
 
-for i in $(find $srcdir -name "*.jpg" -depth 1); do
+#for i in $(find $srcdir -name "*.jpg" -depth 1); do
+for i in $(find $srcdir -name "*.jpg"); do
         filename=${i//$srcdir\//""}
         new_file=${filename//jpg/pgm}
         #echo $srcdir/$filename wird zu $outputdir/$new_file
