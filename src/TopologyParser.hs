@@ -3,7 +3,6 @@ import Neuron
 import Config
 import Data.Char
 import Data.List
-import Data.List.Split
 import Random
 
 
@@ -41,6 +40,13 @@ makeWeightLists randNums (l:layers) (p:prevInputs) = [w] ++ makeWeightLists rand
 	-- drop taken weights	
 	randNums' = drop (p*(fst l)) randNums
 
+-- own implementation of Data.List.Split.
+-- takes a list of Doubles and splits it into sublists with the size of c
+splitEvery :: Int -> [Double] -> [[Double]]
+splitEvery c [] = []
+splitEvery c layersRndList = [w] ++ splitEvery c layersRndList' where
+	w = take c layersRndList	-- sublist
+	layersRndList' = drop c layersRndList
 
 -- input: whole file input str
 -- randNums: a list of random Double values, the list size is equal to the total needed neuron weights in the network.
