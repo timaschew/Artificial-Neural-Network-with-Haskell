@@ -54,6 +54,7 @@ setTrainToInputLayer = set state of input layer neurons, for training or working
 module Backpropagation where
 import Neuron
 import Trainingdata
+import Data.List (foldl')
 
 -- Backpropagation Configuration
 learnRate = 0.350
@@ -113,7 +114,7 @@ forwardPass :: Network -> Network -> Network
 forwardPass [last] c = c ++ [last]
 forwardPass (l:net) c =  forwardPass updatedLs tmp where 
 	nextLayer = head net
-	updatedNextLayer = calcLayer l nextLayer []
+	updatedNextLayer = calcLayer2 l nextLayer
 	updatedLs = [updatedNextLayer] ++ (drop 1 net)
 	tmp = c ++ [l]
 
@@ -153,13 +154,14 @@ backPassSteps (l:net) c = backPassSteps updatedNet tmp where
 -- dynamic calculating from leftLayer to rightLayer
 -- recursion: call calcLayer with leftLayer an rs and calcedFirstNeuron
 -- calcedFirstNeuron: previousNeuronList (c) ++ current Neuron (calculated with Neuron constructor) as List
-calcLayer :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
-calcLayer ll [] c = c
-calcLayer ll (n:rl) c = calcLayer ll (rl) tmp where 
-	v_inputSum = calcNeuron ll (weights n) 0
-	v_state = sigmoidFunction (calcNeuron ll (weights n) 0)
+calcLayer2 :: [Neuron] -> [Neuron] -> [Neuron]
+calcLayer2 ll rl = foldl' (\list rn -> (calcLayer2Helper rn ll) : list) [] rl
+
+calcLayer2Helper :: Neuron -> [Neuron] -> Neuron
+calcLayer2Helper n ll = updatedNeuron where
+	v_inputSum = calcNeuron ll (weights n)
+	v_state = sigmoidFunction v_inputSum
 	updatedNeuron = updateNeuron n v_inputSum v_state (weights n)
-	tmp = c ++ [updatedNeuron]
 
 -- calculate state * weight + offset
 -- use offset for calculation in previous recursion
@@ -170,13 +172,10 @@ calcLayer ll (n:rl) c = calcLayer ll (rl) tmp where
 --
 -- @return Double: offset
 -- @return Double: netinput (sum) for a certain Neuron of layer n + 1
-calcNeuron :: [Neuron] -> [Double] -> Double -> Double
-calcNeuron [] [] c = c
-calcNeuron states [] c = c
-calcNeuron (s:states) (w:weights) c = calcNeuron (states) (weights) tmp where
-	v_inputSum = (state s) * w
-	tmp = v_inputSum + c -- 
-
+calcNeuron :: [Neuron] -> [Double] -> Double
+calcNeuron states weights = result where
+	l = zipWith (\s w -> (state s) * w) states weights
+	result = sum l
 --
 -- CALCULATE ERROR (step 2)
 --
@@ -198,9 +197,8 @@ calcError n expected = setDelta (n) delta where
 --
 -- helper function for step 3a
 -- input: list of neurons (list); output: list of state values from the neurons
-makeStateListOfLayer :: [Neuron] -> [Double] -> [Double]
-makeStateListOfLayer [] c = c
-makeStateListOfLayer (n:layer) c = makeStateListOfLayer layer (c ++ [(state n)])
+makeStateListOfLayer :: [Neuron] -> [Double]
+makeStateListOfLayer layer = foldl' (\list n -> (state n) : list) [] layer
 
 -- creates and return the rightLayer with calculated weight deltas
 calcLayerDeltaWeigts :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
@@ -212,7 +210,7 @@ calcLayerDeltaWeigts ll (n:rl) c = calcLayerDeltaWeigts ll rl tmp where
 -- create new neuron with calculated weight delta (previous layer (only states) also needed: leftLayer)
 calcNeuronDeltaWeights :: [Neuron] -> Neuron -> [Neuron] -> Neuron
 calcNeuronDeltaWeights ll rn c = updatedNeuron where
-	leftLayerStates = makeStateListOfLayer ll []	
+	leftLayerStates = makeStateListOfLayer ll	
 	calcedWeights = calcDeltaWeight leftLayerStates rn (deltaWeights rn) []
 	updatedNeuron = setDeltaWeights rn calcedWeights
 
