@@ -114,7 +114,7 @@ forwardPass :: Network -> Network -> Network
 forwardPass [last] c = c ++ [last]
 forwardPass (l:net) c =  forwardPass updatedLs tmp where 
 	nextLayer = head net
-	updatedNextLayer = calcLayer2 l nextLayer
+	updatedNextLayer = calcLayer l nextLayer
 	updatedLs = [updatedNextLayer] ++ (drop 1 net)
 	tmp = c ++ [l]
 
@@ -154,11 +154,11 @@ backPassSteps (l:net) c = backPassSteps updatedNet tmp where
 -- dynamic calculating from leftLayer to rightLayer
 -- recursion: call calcLayer with leftLayer an rs and calcedFirstNeuron
 -- calcedFirstNeuron: previousNeuronList (c) ++ current Neuron (calculated with Neuron constructor) as List
-calcLayer2 :: [Neuron] -> [Neuron] -> [Neuron]
-calcLayer2 ll rl = foldl' (\list rn -> (calcLayer2Helper rn ll) : list) [] rl
+calcLayer :: [Neuron] -> [Neuron] -> [Neuron]
+calcLayer ll rl = foldl' (\list rn -> (calcLayerHelper rn ll) : list) [] rl
 
-calcLayer2Helper :: Neuron -> [Neuron] -> Neuron
-calcLayer2Helper n ll = updatedNeuron where
+calcLayerHelper :: Neuron -> [Neuron] -> Neuron
+calcLayerHelper n ll = updatedNeuron where
 	v_inputSum = calcNeuron ll (weights n)
 	v_state = sigmoidFunction v_inputSum
 	updatedNeuron = updateNeuron n v_inputSum v_state (weights n)
