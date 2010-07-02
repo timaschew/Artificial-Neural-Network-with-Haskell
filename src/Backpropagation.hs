@@ -86,26 +86,19 @@ setTrainToInputLayer net train = updatedNet where
 	 -- skip first neuron, becaus its a bias
 	inputNeurons	| ((bias (head inputLayer)) == True) = tail inputLayer
 			| otherwise = inputLayer -- no bias use whole layer
-	updatedInputLayer = setTrainToNeuron inputNeurons train []
+	updatedInputLayer = setTrainToNeuron inputNeurons train
 	readyLayer | ((bias (head inputLayer)) == True) = [head inputLayer] ++ updatedInputLayer
 			| otherwise = updatedInputLayer
 	-- use old net but update readyLayer (drop and append updated)
 	updatedNet = [readyLayer] ++ (drop 1 net)
 
 -- update the state of one neuron recursivly
-setTrainToNeuron :: [Neuron] -> TrainData -> [Neuron] -> [Neuron]
-setTrainToNeuron [] [] c = c 
-setTrainToNeuron layer [] c = layerWithEmptyData where
-	layerWithEmptyData = c ++ (setEmptyNeurons layer [])
-setTrainToNeuron (n:layer) (t:train) c = setTrainToNeuron layer train tmp where
-	updatedNeuron = setState n t
-	tmp = c ++ [updatedNeuron]
+setTrainToNeuron :: [Neuron] -> TrainData -> [Neuron]
+setTrainToNeuron layer [] = setEmptyNeurons layer
+setTrainToNeuron layer train = zipWith (\n t -> (setState n t)) layer train
 	
-setEmptyNeurons :: [Neuron] -> [Neuron] -> [Neuron]
-setEmptyNeurons [] c = c
-setEmptyNeurons (n:layer) c = setEmptyNeurons layer updatedNeurons where
-	updated = setState n 0
-	updatedNeurons = c ++ [updated]
+setEmptyNeurons :: [Neuron] -> [Neuron]
+setEmptyNeurons layer = foldl' (\list n -> (setState n 0) : list) [] layer
 
 -- use this method to do the 1. algo step. Example: printNet forwardPass network [[]] 
 -- @params: currentNet newNet
@@ -142,8 +135,8 @@ backPassSteps (l:net) c = backPassSteps updatedNet tmp where
 	-- and nextLayer is the layer before the the output layer
 	nextLayer = (head net)
 	new_l = calcLayerDeltaWeigts nextLayer l 		-- step 3a
-	newest_l = updateLayerWeights new_l []			-- step 3b
-	new_nextLayer = calcLayerDelta nextLayer newest_l [] 0	-- step 3c
+	newest_l = updateLayerWeights new_l				-- step 3b
+	new_nextLayer = calcLayerDelta nextLayer newest_l	-- step 3c
 
 	updatedNet = [new_nextLayer] ++ (drop 1 net)
 	tmp = c ++ [newest_l]
@@ -226,11 +219,8 @@ calcDeltaWeight st rn dws = zipWith(\s w -> (learnRate * (delta rn) * s + moment
 -- BACKWARD PASS (step 3b)
 --
 -- update weights of given layer
-updateLayerWeights :: [Neuron] -> [Neuron] -> [Neuron]
-updateLayerWeights [] result = result
-updateLayerWeights (n:layer) result = updateLayerWeights layer tmp where
-	updatedWeightsOfNeuron = updateNeuronWeights n (weights n) (deltaWeights n)
-	tmp = result ++ [updatedWeightsOfNeuron]
+updateLayerWeights :: [Neuron] -> [Neuron]
+updateLayerWeights layer = foldl' (\list n -> (updateNeuronWeights n (weights n) (deltaWeights n)) : list) [] layer
 
 -- caclulate new weight with the formula: W[2][1][1](t+1) = W[2][1][1](t) + WD[2][1][1]
 updateNeuronWeights :: Neuron -> [Double] -> [Double] -> Neuron
@@ -238,27 +228,26 @@ updateNeuronWeights neuron w deltaW = updatedNeuron where
 	newWeights = zipWith (+) w deltaW
 	updatedNeuron = setWeights neuron newWeights
 	
-	
 --
 -- BACKWARD PASS (step 3c)
 --
 -- sum up the delta * weight_i of a neuron
-getDeltaStateSumForWeight :: Int -> [Neuron] -> Double -> Double
-getDeltaStateSumForWeight i [] c = c
-getDeltaStateSumForWeight i (n:rl) c = getDeltaStateSumForWeight i rl tmp where
-	deltaStateOfNeuron = (delta n) * ((weights n) !! i)
-	tmp = c + deltaStateOfNeuron
+getDeltaStateSumForWeight :: Int -> [Neuron] -> Double
+getDeltaStateSumForWeight i rl = result where
+	deltaStateList = foldl' (\list n -> ((delta n) * ((weights n) !! i)) : list) [] rl
+	result = sum deltaStateList
 
 -- calculate the delta for a layer (not for output layer)
-calcLayerDelta :: [Neuron] -> [Neuron] -> [Neuron] -> Int -> [Neuron]
-calcLayerDelta [] rl c i = c
-calcLayerDelta (n:ll) rl c i = calcLayerDelta ll rl tmp (i+1) where
-	updatedNeuron = calcNeuronDelta n rl i
-	tmp = c ++ [updatedNeuron]
+calcLayerDeltaHelper :: [Neuron] -> [Neuron] -> [Int] -> [Neuron]
+calcLayerDeltaHelper ll rl indexList = zipWith(\n i -> (calcNeuronDelta n rl i)) ll indexList
+
+calcLayerDelta :: [Neuron] -> [Neuron] -> [Neuron]
+calcLayerDelta ll rl = calcLayerDeltaHelper ll rl indexList where
+	indexList = [0..((length ll)-1)]
 
 -- calcuate the delta for a neuron of a layer (not from the output layer)
 calcNeuronDelta	:: Neuron -> [Neuron] -> Int -> Neuron
 calcNeuronDelta ln rl i = updatedNeuron where
-	deltaStateSumOfNextLayer = getDeltaStateSumForWeight i rl 0
+	deltaStateSumOfNextLayer = getDeltaStateSumForWeight i rl
 	formula = (state ln) * (1 - (state ln)) * deltaStateSumOfNextLayer
 	updatedNeuron = setDelta ln formula
