@@ -1,157 +1,157 @@
-	Fri Jul  2 01:40 2010 Time and Allocation Profiling Report  (Final)
+	Fri Jul  2 02:00 2010 Time and Allocation Profiling Report  (Final)
 
 	   Main +RTS -p -RTS pgm1 10
 
-	total time  =        0.80 secs   (40 ticks @ 20 ms)
-	total alloc = 2,552,740,416 bytes  (excludes profiling overheads)
+	total time  =        0.34 secs   (17 ticks @ 20 ms)
+	total alloc = 594,915,628 bytes  (excludes profiling overheads)
 
 COST CENTRE                    MODULE               %time %alloc
 
-calcDeltaWeight                Backpropagation       37.5   77.6
-calcNeuron                     Backpropagation       12.5    1.5
-showsPrec_arU                  Neuron                12.5    2.9
-universalUseCase               Main                  10.0    0.0
-normalize                      GraphicInterface       7.5    0.5
-calcLayerDelta                 Backpropagation        7.5    7.9
-setTrainToInputLayer           Backpropagation        5.0    7.8
-getDeltaStateSumForWeight      Backpropagation        5.0    0.0
-makeStateListOfLayer           Backpropagation        2.5    0.6
+universalUseCase               Main                  29.4    0.0
+setTrainToInputLayer           Backpropagation       17.6   33.7
+showsPrec_arU                  Neuron                17.6   12.5
+calcLayerDelta                 Backpropagation       11.8   34.0
+normalize                      GraphicInterface       5.9    2.1
+updateLayerWeights             Backpropagation        5.9    4.2
+makeStateListOfLayer           Backpropagation        5.9    2.6
+calcNeuron                     Backpropagation        5.9    6.2
+calcDeltaWeight                Backpropagation        0.0    4.2
 
 
                                                                                                individual    inherited
 COST CENTRE              MODULE                                               no.    entries  %time %alloc   %time %alloc
 
 MAIN                     MAIN                                                   1           0   0.0    0.0   100.0  100.0
- main                    Main                                                 904           1   0.0    0.0    87.5   97.1
-  staticPPMexample       Main                                                 911           1   0.0    0.0    77.5   97.1
-   getOutputMatrix       Utils                                                977           2   0.0    0.0     0.0    0.0
-   trainNet              Utils                                                941          12   0.0    0.0    70.0   96.5
-    genericTraining      Backpropagation                                      942         110   0.0    0.0    70.0   96.5
-     backwardPass        Backpropagation                                      946         100   0.0    0.0    52.5   87.2
-      calcLayerError     Backpropagation                                      976        1100   0.0    0.0     0.0    0.0
-      backPassSteps      Backpropagation                                      947         300   0.0    0.0    52.5   87.2
-       updateLayerWeights Backpropagation                                      969        2300   0.0    1.0     0.0    1.0
-       calcLayerDeltaWeigts Backpropagation                                      967        2300   0.0    0.0    40.0   78.3
-        calcDeltaWeight  Backpropagation                                      974      388000  37.5   77.6    37.5   77.6
-        makeStateListOfLayer Backpropagation                                      973      388000   2.5    0.6     2.5    0.6
-       calcLayerDelta    Backpropagation                                      949       38800   7.5    7.9    12.5    7.9
-        getDeltaStateSumForWeight Backpropagation                                      966       15488   5.0    0.0     5.0    0.0
-     forwardPass         Backpropagation                                      944         300   0.0    0.0    12.5    1.5
-      sigmoidFunction    Neuron                                               975        3999   0.0    0.0     0.0    0.0
-      calcLayerHelper    Backpropagation                                      971           0   0.0    0.0    12.5    1.5
-       calcNeuron        Backpropagation                                      972        2000  12.5    1.5    12.5    1.5
-      calcLayer          Backpropagation                                      968         200   0.0    0.0     0.0    0.0
-     setTrainToInputLayer Backpropagation                                      943         300   5.0    7.8     5.0    7.8
-      setTrainToNeuron   Backpropagation                                      950       37500   0.0    0.0     0.0    0.0
-   readPPMFile           GraphicInterface                                     912          10   0.0    0.1     7.5    0.5
-    normalize            GraphicInterface                                     965        3740   7.5    0.5     7.5    0.5
-  readI                  Utils                                                910           1   0.0    0.0     0.0    0.0
-  universalUseCase       Main                                                 909           1  10.0    0.0    10.0    0.0
-   showError             Utils                                                979          11   0.0    0.0     0.0    0.0
-   saveWeights           Utils                                                936           1   0.0    0.0     0.0    0.0
-  saveWeights            Utils                                                951           0   0.0    0.0     0.0    0.0
- CAF:a81                 Main                                                 897           1   0.0    0.0    12.5    2.9
-  showList_as5           Neuron                                               948           3   0.0    0.0    12.5    2.9
-   showsPrec_arU         Neuron                                               952        7132  12.5    2.9    12.5    2.9
- CAF:nnet                Main                                                 895           1   0.0    0.0     0.0    0.0
-  nnet                   Main                                                 945           1   0.0    0.0     0.0    0.0
- CAF:fn10_rx7O           Main                                                 887           1   0.0    0.0     0.0    0.0
-  staticPPMexample       Main                                                 934           0   0.0    0.0     0.0    0.0
- CAF:lvl18214_rx7M       Main                                                 886           1   0.0    0.0     0.0    0.0
-  staticPPMexample       Main                                                 935           0   0.0    0.0     0.0    0.0
- CAF:fn9_rx7K            Main                                                 885           1   0.0    0.0     0.0    0.0
-  staticPPMexample       Main                                                 932           0   0.0    0.0     0.0    0.0
- CAF:lvl18213_rx7I       Main                                                 884           1   0.0    0.0     0.0    0.0
-  staticPPMexample       Main                                                 933           0   0.0    0.0     0.0    0.0
- CAF:fn8_rx7G            Main                                                 883           1   0.0    0.0     0.0    0.0
+ main                    Main                                                 900           1   0.0    0.0    82.4   87.5
+  staticPPMexample       Main                                                 907           1   0.0    0.0    52.9   87.5
+   getOutputMatrix       Utils                                                973           2   0.0    0.0     0.0    0.0
+   trainNet              Utils                                                937          12   0.0    0.0    47.1   85.2
+    genericTraining      Backpropagation                                      938         110   0.0    0.0    47.1   85.2
+     backwardPass        Backpropagation                                      942         100   0.0    0.0    23.5   45.2
+      calcLayerError     Backpropagation                                      972         100   0.0    0.0     0.0    0.0
+      backPassSteps      Backpropagation                                      943         300   0.0    0.1    23.5   45.1
+       calcDeltaWeight   Backpropagation                                      970        2000   0.0    4.2     0.0    4.2
+       makeStateListOfLayer Backpropagation                                      969      388000   5.9    2.6     5.9    2.6
+       updateLayerWeights Backpropagation                                      965        2300   5.9    4.2     5.9    4.2
+       calcLayerDeltaWeigts Backpropagation                                      963         200   0.0    0.0     0.0    0.0
+       calcLayerDelta    Backpropagation                                      945       38800  11.8   34.0    11.8   34.1
+        getDeltaStateSumForWeight Backpropagation                                      962       15488   0.0    0.1     0.0    0.1
+     forwardPass         Backpropagation                                      940         300   0.0    0.1     5.9    6.3
+      sigmoidFunction    Neuron                                               971        4020   0.0    0.1     0.0    0.1
+      calcLayerHelper    Backpropagation                                      967           0   0.0    0.0     5.9    6.2
+       calcNeuron        Backpropagation                                      968        2000   5.9    6.2     5.9    6.2
+      calcLayer          Backpropagation                                      964         200   0.0    0.0     0.0    0.0
+     setTrainToInputLayer Backpropagation                                      939         300  17.6   33.7    17.6   33.7
+      setTrainToNeuron   Backpropagation                                      946       37500   0.0    0.0     0.0    0.0
+   readPPMFile           GraphicInterface                                     908          10   0.0    0.2     5.9    2.3
+    normalize            GraphicInterface                                     961        3740   5.9    2.1     5.9    2.1
+  readI                  Utils                                                906           1   0.0    0.0     0.0    0.0
+  universalUseCase       Main                                                 905           1  29.4    0.0    29.4    0.0
+   showError             Utils                                                975          11   0.0    0.0     0.0    0.0
+   saveWeights           Utils                                                932           1   0.0    0.0     0.0    0.0
+  saveWeights            Utils                                                947           0   0.0    0.0     0.0    0.0
+ CAF:a81                 Main                                                 893           1   0.0    0.0    17.6   12.5
+  showList_as5           Neuron                                               944           3   0.0    0.0    17.6   12.5
+   showsPrec_arU         Neuron                                               948        7130  17.6   12.5    17.6   12.5
+ CAF:nnet                Main                                                 891           1   0.0    0.0     0.0    0.0
+  nnet                   Main                                                 941           1   0.0    0.0     0.0    0.0
+ CAF:fn10_rx7O           Main                                                 883           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 930           0   0.0    0.0     0.0    0.0
- CAF:lvl18212_rx7E       Main                                                 882           1   0.0    0.0     0.0    0.0
+ CAF:lvl18214_rx7M       Main                                                 882           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 931           0   0.0    0.0     0.0    0.0
- CAF:fn7_rx7C            Main                                                 881           1   0.0    0.0     0.0    0.0
+ CAF:fn9_rx7K            Main                                                 881           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 928           0   0.0    0.0     0.0    0.0
- CAF:lvl18211_rx7A       Main                                                 880           1   0.0    0.0     0.0    0.0
+ CAF:lvl18213_rx7I       Main                                                 880           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 929           0   0.0    0.0     0.0    0.0
- CAF:fn6_rx7y            Main                                                 879           1   0.0    0.0     0.0    0.0
+ CAF:fn8_rx7G            Main                                                 879           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 926           0   0.0    0.0     0.0    0.0
- CAF:lvl18210_rx7w       Main                                                 878           1   0.0    0.0     0.0    0.0
+ CAF:lvl18212_rx7E       Main                                                 878           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 927           0   0.0    0.0     0.0    0.0
- CAF:fn5_rx7u            Main                                                 877           1   0.0    0.0     0.0    0.0
+ CAF:fn7_rx7C            Main                                                 877           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 924           0   0.0    0.0     0.0    0.0
- CAF:lvl18209_rx7s       Main                                                 876           1   0.0    0.0     0.0    0.0
+ CAF:lvl18211_rx7A       Main                                                 876           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 925           0   0.0    0.0     0.0    0.0
- CAF:fn4_rx7q            Main                                                 875           1   0.0    0.0     0.0    0.0
+ CAF:fn6_rx7y            Main                                                 875           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 922           0   0.0    0.0     0.0    0.0
- CAF:lvl18208_rx7o       Main                                                 874           1   0.0    0.0     0.0    0.0
+ CAF:lvl18210_rx7w       Main                                                 874           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 923           0   0.0    0.0     0.0    0.0
- CAF:fn3_rx7m            Main                                                 873           1   0.0    0.0     0.0    0.0
+ CAF:fn5_rx7u            Main                                                 873           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 920           0   0.0    0.0     0.0    0.0
- CAF:lvl18207_rx7k       Main                                                 872           1   0.0    0.0     0.0    0.0
+ CAF:lvl18209_rx7s       Main                                                 872           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 921           0   0.0    0.0     0.0    0.0
- CAF:fn2_rx7i            Main                                                 871           1   0.0    0.0     0.0    0.0
+ CAF:fn4_rx7q            Main                                                 871           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 918           0   0.0    0.0     0.0    0.0
- CAF:lvl18206_rx7g       Main                                                 870           1   0.0    0.0     0.0    0.0
+ CAF:lvl18208_rx7o       Main                                                 870           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 919           0   0.0    0.0     0.0    0.0
- CAF:fn1_rx7e            Main                                                 869           1   0.0    0.0     0.0    0.0
-  staticPPMexample       Main                                                 913           0   0.0    0.0     0.0    0.0
- CAF:lvl18205_rx7c       Main                                                 868           1   0.0    0.0     0.0    0.0
-  staticPPMexample       Main                                                 917           0   0.0    0.0     0.0    0.0
- CAF:path8_rx7a          Main                                                 867           1   0.0    0.0     0.0    0.0
-  staticPPMexample       Main                                                 914           0   0.0    0.0     0.0    0.0
- CAF:lvl18204_rx78       Main                                                 866           1   0.0    0.0     0.0    0.0
+ CAF:fn3_rx7m            Main                                                 869           1   0.0    0.0     0.0    0.0
   staticPPMexample       Main                                                 916           0   0.0    0.0     0.0    0.0
- CAF:lvl27_rx74          Main                                                 715           1   0.0    0.0     0.0    0.0
-  main                   Main                                                 905           0   0.0    0.0     0.0    0.0
- CAF:lvl26_rx72          Main                                                 714           1   0.0    0.0     0.0    0.0
-  main                   Main                                                 906           0   0.0    0.0     0.0    0.0
- CAF:lvl25_rx70          Main                                                 713           1   0.0    0.0     0.0    0.0
-  main                   Main                                                 907           0   0.0    0.0     0.0    0.0
- CAF:lvl24_rx6Y          Main                                                 712           1   0.0    0.0     0.0    0.0
-  main                   Main                                                 908           0   0.0    0.0     0.0    0.0
- CAF                     Data.Typeable                                        678           1   0.0    0.0     0.0    0.0
- CAF                     GHC.Show                                             676           3   0.0    0.0     0.0    0.0
- CAF                     GHC.IOBase                                           656           3   0.0    0.0     0.0    0.0
- CAF                     GHC.Read                                             654           2   0.0    0.0     0.0    0.0
- CAF                     GHC.Float                                            653           2   0.0    0.0     0.0    0.0
- CAF                     Text.Read.Lex                                        647           8   0.0    0.0     0.0    0.0
- CAF                     Data.HashTable                                       633           2   0.0    0.0     0.0    0.0
- CAF                     GHC.Handle                                           631           7   0.0    0.0     0.0    0.0
-  saveWeights            Utils                                                940           0   0.0    0.0     0.0    0.0
- CAF                     GHC.Conc                                             630           1   0.0    0.0     0.0    0.0
- CAF:lvl20_rIh           Neuron                                               596           1   0.0    0.0     0.0    0.0
+ CAF:lvl18207_rx7k       Main                                                 868           1   0.0    0.0     0.0    0.0
+  staticPPMexample       Main                                                 917           0   0.0    0.0     0.0    0.0
+ CAF:fn2_rx7i            Main                                                 867           1   0.0    0.0     0.0    0.0
+  staticPPMexample       Main                                                 914           0   0.0    0.0     0.0    0.0
+ CAF:lvl18206_rx7g       Main                                                 866           1   0.0    0.0     0.0    0.0
+  staticPPMexample       Main                                                 915           0   0.0    0.0     0.0    0.0
+ CAF:fn1_rx7e            Main                                                 865           1   0.0    0.0     0.0    0.0
+  staticPPMexample       Main                                                 909           0   0.0    0.0     0.0    0.0
+ CAF:lvl18205_rx7c       Main                                                 864           1   0.0    0.0     0.0    0.0
+  staticPPMexample       Main                                                 913           0   0.0    0.0     0.0    0.0
+ CAF:path8_rx7a          Main                                                 863           1   0.0    0.0     0.0    0.0
+  staticPPMexample       Main                                                 910           0   0.0    0.0     0.0    0.0
+ CAF:lvl18204_rx78       Main                                                 862           1   0.0    0.0     0.0    0.0
+  staticPPMexample       Main                                                 912           0   0.0    0.0     0.0    0.0
+ CAF:lvl27_rx74          Main                                                 711           1   0.0    0.0     0.0    0.0
+  main                   Main                                                 901           0   0.0    0.0     0.0    0.0
+ CAF:lvl26_rx72          Main                                                 710           1   0.0    0.0     0.0    0.0
+  main                   Main                                                 902           0   0.0    0.0     0.0    0.0
+ CAF:lvl25_rx70          Main                                                 709           1   0.0    0.0     0.0    0.0
+  main                   Main                                                 903           0   0.0    0.0     0.0    0.0
+ CAF:lvl24_rx6Y          Main                                                 708           1   0.0    0.0     0.0    0.0
+  main                   Main                                                 904           0   0.0    0.0     0.0    0.0
+ CAF                     Data.Typeable                                        674           1   0.0    0.0     0.0    0.0
+ CAF                     GHC.Show                                             672           3   0.0    0.0     0.0    0.0
+ CAF                     GHC.IOBase                                           652           3   0.0    0.0     0.0    0.0
+ CAF                     GHC.Read                                             650           2   0.0    0.0     0.0    0.0
+ CAF                     GHC.Float                                            649           2   0.0    0.0     0.0    0.0
+ CAF                     Text.Read.Lex                                        643           8   0.0    0.0     0.0    0.0
+ CAF                     Data.HashTable                                       629           2   0.0    0.0     0.0    0.0
+ CAF                     GHC.Handle                                           627           7   0.0    0.0     0.0    0.0
+  saveWeights            Utils                                                936           0   0.0    0.0     0.0    0.0
+ CAF                     GHC.Conc                                             626           1   0.0    0.0     0.0    0.0
+ CAF:lvl20_rIh           Neuron                                               592           1   0.0    0.0     0.0    0.0
+  showsPrec_arU          Neuron                                               949           0   0.0    0.0     0.0    0.0
+ CAF:lvl19_rIf           Neuron                                               591           1   0.0    0.0     0.0    0.0
+  showsPrec_arU          Neuron                                               950           0   0.0    0.0     0.0    0.0
+ CAF:lvl17_rIb           Neuron                                               590           1   0.0    0.0     0.0    0.0
+  showsPrec_arU          Neuron                                               951           0   0.0    0.0     0.0    0.0
+ CAF:lvl16_rI9           Neuron                                               589           1   0.0    0.0     0.0    0.0
+  showsPrec_arU          Neuron                                               952           0   0.0    0.0     0.0    0.0
+ CAF:lvl14_rI5           Neuron                                               588           1   0.0    0.0     0.0    0.0
   showsPrec_arU          Neuron                                               953           0   0.0    0.0     0.0    0.0
- CAF:lvl19_rIf           Neuron                                               595           1   0.0    0.0     0.0    0.0
+ CAF:lvl13_rI3           Neuron                                               587           1   0.0    0.0     0.0    0.0
   showsPrec_arU          Neuron                                               954           0   0.0    0.0     0.0    0.0
- CAF:lvl17_rIb           Neuron                                               594           1   0.0    0.0     0.0    0.0
+ CAF:lvl12_rI1           Neuron                                               586           1   0.0    0.0     0.0    0.0
   showsPrec_arU          Neuron                                               955           0   0.0    0.0     0.0    0.0
- CAF:lvl16_rI9           Neuron                                               593           1   0.0    0.0     0.0    0.0
+ CAF:lvl11_rHZ           Neuron                                               585           1   0.0    0.0     0.0    0.0
   showsPrec_arU          Neuron                                               956           0   0.0    0.0     0.0    0.0
- CAF:lvl14_rI5           Neuron                                               592           1   0.0    0.0     0.0    0.0
+ CAF:lvl9_rHV            Neuron                                               584           1   0.0    0.0     0.0    0.0
   showsPrec_arU          Neuron                                               957           0   0.0    0.0     0.0    0.0
- CAF:lvl13_rI3           Neuron                                               591           1   0.0    0.0     0.0    0.0
+ CAF:lvl8_rHT            Neuron                                               583           1   0.0    0.0     0.0    0.0
   showsPrec_arU          Neuron                                               958           0   0.0    0.0     0.0    0.0
- CAF:lvl12_rI1           Neuron                                               590           1   0.0    0.0     0.0    0.0
+ CAF:lvl7_rHR            Neuron                                               582           1   0.0    0.0     0.0    0.0
   showsPrec_arU          Neuron                                               959           0   0.0    0.0     0.0    0.0
- CAF:lvl11_rHZ           Neuron                                               589           1   0.0    0.0     0.0    0.0
+ CAF:lvl6_rHP            Neuron                                               581           1   0.0    0.0     0.0    0.0
   showsPrec_arU          Neuron                                               960           0   0.0    0.0     0.0    0.0
- CAF:lvl9_rHV            Neuron                                               588           1   0.0    0.0     0.0    0.0
-  showsPrec_arU          Neuron                                               961           0   0.0    0.0     0.0    0.0
- CAF:lvl8_rHT            Neuron                                               587           1   0.0    0.0     0.0    0.0
-  showsPrec_arU          Neuron                                               962           0   0.0    0.0     0.0    0.0
- CAF:lvl7_rHR            Neuron                                               586           1   0.0    0.0     0.0    0.0
-  showsPrec_arU          Neuron                                               963           0   0.0    0.0     0.0    0.0
- CAF:lvl6_rHP            Neuron                                               585           1   0.0    0.0     0.0    0.0
-  showsPrec_arU          Neuron                                               964           0   0.0    0.0     0.0    0.0
- CAF:dataPath            Config                                               583           1   0.0    0.0     0.0    0.0
-  dataPath               Config                                               915           1   0.0    0.0     0.0    0.0
- CAF:lvl50_r6YL          Utils                                                550           1   0.0    0.0     0.0    0.0
-  showError              Utils                                                980           0   0.0    0.0     0.0    0.0
- CAF:lvl11               Utils                                                534           1   0.0    0.0     0.0    0.0
-  saveWeights            Utils                                                937           0   0.0    0.0     0.0    0.0
- CAF:lvl10               Utils                                                533           1   0.0    0.0     0.0    0.0
-  saveWeights            Utils                                                938           0   0.0    0.0     0.0    0.0
- CAF:txt                 Utils                                                532           1   0.0    0.0     0.0    0.0
-  saveWeights            Utils                                                939           0   0.0    0.0     0.0    0.0
- CAF:sum                 Backpropagation                                      528           1   0.0    0.0     0.0    0.0
- CAF:sigmoidFunction     Backpropagation                                      527           1   0.0    0.0     0.0    0.0
-  sigmoidFunction        Neuron                                               970           5   0.0    0.0     0.0    0.0
- CAF                     System.Environment                                   492           2   0.0    0.0     0.0    0.0
+ CAF:dataPath            Config                                               579           1   0.0    0.0     0.0    0.0
+  dataPath               Config                                               911           1   0.0    0.0     0.0    0.0
+ CAF:lvl50_r6Ej          Utils                                                546           1   0.0    0.0     0.0    0.0
+  showError              Utils                                                976           0   0.0    0.0     0.0    0.0
+ CAF:lvl11               Utils                                                530           1   0.0    0.0     0.0    0.0
+  saveWeights            Utils                                                933           0   0.0    0.0     0.0    0.0
+ CAF:lvl10               Utils                                                529           1   0.0    0.0     0.0    0.0
+  saveWeights            Utils                                                934           0   0.0    0.0     0.0    0.0
+ CAF:txt                 Utils                                                528           1   0.0    0.0     0.0    0.0
+  saveWeights            Utils                                                935           0   0.0    0.0     0.0    0.0
+ CAF:sum                 Backpropagation                                      524           1   0.0    0.0     0.0    0.0
+ CAF:sigmoidFunction     Backpropagation                                      523           1   0.0    0.0     0.0    0.0
+  sigmoidFunction        Neuron                                               966           5   0.0    0.0     0.0    0.0
+ CAF                     System.Environment                                   490           2   0.0    0.0     0.0    0.0

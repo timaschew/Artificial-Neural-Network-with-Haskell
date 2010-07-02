@@ -125,7 +125,7 @@ backwardPass :: Network -> TrainData -> Network
 backwardPass net train = trainedNet where
 	outputlayer = last net
 	-- step 2
-	calcedErrorLayer = calcLayerError outputlayer train [] -- calc output error
+	calcedErrorLayer = calcLayerError outputlayer train -- calc output error
 	updatedNet = (init net) ++ [calcedErrorLayer] -- updating output layer
 	reversedNet = reverse updatedNet --
 	reversedTrainedNet = backPassSteps reversedNet []
@@ -141,7 +141,7 @@ backPassSteps (l:net) c = backPassSteps updatedNet tmp where
 	-- because net was reverse in backwardPass
 	-- and nextLayer is the layer before the the output layer
 	nextLayer = (head net)
-	new_l = calcLayerDeltaWeigts nextLayer l [] 		-- step 3a
+	new_l = calcLayerDeltaWeigts nextLayer l 		-- step 3a
 	newest_l = updateLayerWeights new_l []			-- step 3b
 	new_nextLayer = calcLayerDelta nextLayer newest_l [] 0	-- step 3c
 
@@ -180,11 +180,8 @@ calcNeuron states weights = result where
 -- CALCULATE ERROR (step 2)
 --
 -- calculate error (delta) from output layer
-calcLayerError :: [Neuron] -> [Double] -> [Neuron] -> [Neuron]
-calcLayerError [] [] c = c
-calcLayerError (n:layer) (e:el) c = calcLayerError layer el tmp where
-	updatedNeuron = calcError n e
-	tmp = c ++ [updatedNeuron] 
+calcLayerError :: [Neuron] -> [Double] -> [Neuron]
+calcLayerError layer el = zipWith (\n e -> (calcError n e)) layer el
 
 -- calc error (delta) for one neuron of the output layer
 calcError :: Neuron -> Double -> Neuron
@@ -201,17 +198,14 @@ makeStateListOfLayer :: [Neuron] -> [Double]
 makeStateListOfLayer layer = foldl' (\list n -> (state n) : list) [] layer
 
 -- creates and return the rightLayer with calculated weight deltas
-calcLayerDeltaWeigts :: [Neuron] -> [Neuron] -> [Neuron] -> [Neuron]
-calcLayerDeltaWeigts ll [] c = c
-calcLayerDeltaWeigts ll (n:rl) c = calcLayerDeltaWeigts ll rl tmp where
-	updatedNeuron = calcNeuronDeltaWeights ll n []
-	tmp = c ++ [updatedNeuron]
+calcLayerDeltaWeigts :: [Neuron] -> [Neuron] -> [Neuron]
+calcLayerDeltaWeigts ll rl = foldl' (\list n -> (calcNeuronDeltaWeights ll n) : list) [] rl
 
 -- create new neuron with calculated weight delta (previous layer (only states) also needed: leftLayer)
-calcNeuronDeltaWeights :: [Neuron] -> Neuron -> [Neuron] -> Neuron
-calcNeuronDeltaWeights ll rn c = updatedNeuron where
+calcNeuronDeltaWeights :: [Neuron] -> Neuron -> Neuron
+calcNeuronDeltaWeights ll rn = updatedNeuron where
 	leftLayerStates = makeStateListOfLayer ll	
-	calcedWeights = calcDeltaWeight leftLayerStates rn (deltaWeights rn) []
+	calcedWeights = calcDeltaWeight leftLayerStates rn (deltaWeights rn)
 	updatedNeuron = setDeltaWeights rn calcedWeights
 
 -- calc recursivly weights between n and rn
@@ -219,18 +213,15 @@ calcNeuronDeltaWeights ll rn c = updatedNeuron where
 -- @param w/weights - weights of neuron
 -- @param rn = right neuron (using ONLY delta of its => TODO?)
 -- @param result = recursion result
-calcDeltaWeight :: [Double] -> Neuron -> [Double] -> [Double] -> [Double]
-calcDeltaWeight [] rn [] c = c
-calcDeltaWeight (s:st) rn (w:dws) c = calcDeltaWeight st rn dws tmp where
-	-- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1] + M * this(t-1)
-	deltaWeight = learnRate * (delta rn) * s + momentum * w
-	tmp = c ++ [deltaWeight]
--- Don't use momentum (not need for first learn iteration (no deltaWeights)	
-calcDeltaWeight (s:st) rn [] c = calcDeltaWeight st rn [] tmp where
-	-- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1]
-	deltaWeight = learnRate * (delta rn) * s
-	tmp = c ++ [deltaWeight]
-	
+calcDeltaWeight :: [Double] -> Neuron -> [Double] -> [Double]
+-- Don't use momentum (not need for first learn iteration (no deltaWeights)
+-- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1]
+calcDeltaWeight st rn [] = foldl'(\list s -> (learnRate * (delta rn) * s) : list) [] st
+
+-- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1] + M * this(t-1)
+calcDeltaWeight st rn dws = zipWith(\s w -> (learnRate * (delta rn) * s + momentum * w)) st dws
+
+
 --
 -- BACKWARD PASS (step 3b)
 --
