@@ -236,7 +236,7 @@ work :: Network -> TrainData -> [Double]
 work net inputData = result where
 	inputted = setTrainToInputLayer net inputData
 	forwarded = forwardPass inputted []
-	result = makeStateListOfLayer (last forwarded) []
+	result = makeStateListOfLayer (last forwarded)
 
 
 dec2bin = map i2c . reverse . unfoldr decomp

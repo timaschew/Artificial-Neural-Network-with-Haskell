@@ -1,123 +1,140 @@
-	Wed May 26 19:17 2010 Time and Allocation Profiling Report  (Final)
+	Sun Jul  4 23:48 2010 Time and Allocation Profiling Report  (Final)
 
-	   Main +RTS -hc -p -K100M -RTS
+	   Main +RTS -H128M -prof -sstderr -RTS pgm1 500
 
-	total time  =        0.30 secs   (15 ticks @ 20 ms)
-	total alloc = 256,233,784 bytes  (excludes profiling overheads)
+	total time  =        7.60 secs   (380 ticks @ 20 ms)
+	total alloc = 4,647,851,524 bytes  (excludes profiling overheads)
 
 COST CENTRE                    MODULE               %time %alloc
 
-sigmoidFunction                Neuron                20.0    4.7
-updateLayerWeights             Backpropagation       20.0   17.3
-calcLayerDelta                 Backpropagation       13.3   17.9
-calcLayer                      Backpropagation       13.3   10.7
-calcDeltaWeight                Backpropagation       13.3   10.1
-setTrainToNeuron               Backpropagation        6.7    4.6
-setTrainToInputLayer           Backpropagation        6.7    1.2
-genericTraining                Backpropagation        6.7    0.9
-makeStateListOfLayer           Backpropagation        0.0    7.3
-forwardPass                    Backpropagation        0.0    3.2
-calcNeuron                     Backpropagation        0.0    3.4
-calcLayerError                 Backpropagation        0.0    2.2
-calcLayerDeltaWeigts           Backpropagation        0.0    8.6
-backwardPass                   Backpropagation        0.0    3.3
-backPassSteps                  Backpropagation        0.0    3.7
+calcDeltaWeight                Backpropagation       26.6   26.6
+calcNeuron                     Backpropagation       22.4   14.9
+updateNeuronWeights            Backpropagation       14.7   26.6
+makeStateListOfLayer           Backpropagation        8.9   10.0
+state                          Neuron                 7.1    5.5
+calcLayerDelta                 Backpropagation        3.9    4.7
+setState                       Neuron                 2.1    1.8
+delta                          Neuron                 2.1    0.6
+inputSum                       Neuron                 1.8    1.0
+showsPrec_a47I                 Neuron                 1.6    1.7
+setTrainToNeuron               Backpropagation        1.3    1.8
+getDeltaStateSumForWeight      Backpropagation        1.3    0.1
+bias                           Neuron                 1.3    1.1
+deltaWeights                   Neuron                 1.1    1.1
+weights                        Neuron                 0.8    1.1
 
 
                                                                                                individual    inherited
 COST CENTRE              MODULE                                               no.    entries  %time %alloc   %time %alloc
 
 MAIN                     MAIN                                                   1           0   0.0    0.0   100.0  100.0
- main                    Main                                                 330           1   0.0    0.0     0.0    0.0
- CAF:lvl67               Main                                                 324           1   0.0    0.0     0.0    0.0
- CAF:a81                 Main                                                 323           1   0.0    0.0     0.0    0.1
-  showList_arK           Neuron                                               340           3   0.0    0.0     0.0    0.1
-   showsPrec_arz         Neuron                                               354         126   0.0    0.1     0.0    0.1
- CAF:goodNet             Main                                                 322           1   0.0    0.0   100.0   99.9
-  goodNet                Main                                                 332           1   0.0    0.0   100.0   99.9
-   trainNet              Main                                                 333       10002   0.0    0.0   100.0   99.9
-    genericTraining      Backpropagation                                      334       50000   6.7    0.9   100.0   99.8
-     backwardPass        Backpropagation                                      338       40000   0.0    3.3    46.7   71.2
-      calcLayerError     Backpropagation                                      379       80000   0.0    2.2     0.0    2.2
-      backPassSteps      Backpropagation                                      339      120000   0.0    3.7    46.7   65.6
-       updateLayerWeights Backpropagation                                      371      240000  20.0   17.3    20.0   17.3
-       calcLayerDeltaWeigts Backpropagation                                      369      240000   0.0    8.6    13.3   26.0
-        calcDeltaWeight  Backpropagation                                      377      480000  13.3   10.1    13.3   10.1
-        makeStateListOfLayer Backpropagation                                      376      480000   0.0    7.3     0.0    7.3
-       calcLayerDelta    Backpropagation                                      341      320000  13.3   17.9    13.3   18.6
-        getDeltaStateSumForWeight Backpropagation                                      368      160008   0.0    0.7     0.0    0.7
-     forwardPass         Backpropagation                                      336      120000   0.0    3.2    33.3   22.0
-      calcLayer          Backpropagation                                      370      240000  13.3   10.7    33.3   18.7
-       sigmoidFunction   Neuron                                               378      119999  20.0    4.7    20.0    4.7
-       calcNeuron        Backpropagation                                      375      480012   0.0    3.4     0.0    3.4
-     setTrainToInputLayer Backpropagation                                      335      120000   6.7    1.2    13.3    5.8
-      setTrainToNeuron   Backpropagation                                      347      120000   6.7    4.6     6.7    4.6
- CAF:outputValues        Main                                                 319           1   0.0    0.0     0.0    0.0
-  outputValues           Main                                                 380           2   0.0    0.0     0.0    0.0
- CAF:lvl62               Main                                                 318           1   0.0    0.0     0.0    0.0
-  outputValues           Main                                                 384           1   0.0    0.0     0.0    0.0
- CAF:lvl61               Main                                                 317           1   0.0    0.0     0.0    0.0
-  outputValues           Main                                                 385           1   0.0    0.0     0.0    0.0
- CAF:lvl60               Main                                                 316           1   0.0    0.0     0.0    0.0
-  outputValues           Main                                                 386           1   0.0    0.0     0.0    0.0
- CAF:inputValues         Main                                                 315           1   0.0    0.0     0.0    0.0
-  inputValues            Main                                                 348           2   0.0    0.0     0.0    0.0
- CAF:lvl59               Main                                                 314           1   0.0    0.0     0.0    0.0
-  inputValues            Main                                                 351           1   0.0    0.0     0.0    0.0
- CAF:lvl58               Main                                                 313           1   0.0    0.0     0.0    0.0
-  inputValues            Main                                                 352           1   0.0    0.0     0.0    0.0
- CAF:lvl57               Main                                                 312           1   0.0    0.0     0.0    0.0
-  inputValues            Main                                                 353           1   0.0    0.0     0.0    0.0
- CAF:network             Main                                                 311           1   0.0    0.0     0.0    0.0
-  network                Main                                                 337           1   0.0    0.0     0.0    0.0
- CAF:b2_0                Main                                                 310           1   0.0    0.0     0.0    0.0
-  b2_0                   Main                                                 372           1   0.0    0.0     0.0    0.0
- CAF:n2_1                Main                                                 309           1   0.0    0.0     0.0    0.0
-  n2_1                   Main                                                 373           1   0.0    0.0     0.0    0.0
- CAF:n2_2                Main                                                 308           1   0.0    0.0     0.0    0.0
-  n2_2                   Main                                                 383           1   0.0    0.0     0.0    0.0
- CAF:n3_1                Main                                                 307           1   0.0    0.0     0.0    0.0
-  n3_1                   Main                                                 381           1   0.0    0.0     0.0    0.0
- CAF:lvl2                Main                                                 303           1   0.0    0.0     0.0    0.0
-  network                Main                                                 342           0   0.0    0.0     0.0    0.0
-   b1_0                  Main                                                 343           1   0.0    0.0     0.0    0.0
- CAF:lvl1                Main                                                 302           1   0.0    0.0     0.0    0.0
-  network                Main                                                 345           0   0.0    0.0     0.0    0.0
-   n1_1                  Main                                                 346           1   0.0    0.0     0.0    0.0
- CAF:lvl                 Main                                                 301           1   0.0    0.0     0.0    0.0
-  network                Main                                                 349           0   0.0    0.0     0.0    0.0
-   n1_2                  Main                                                 350           1   0.0    0.0     0.0    0.0
- CAF                     GHC.Show                                             297           3   0.0    0.0     0.0    0.0
- CAF                     GHC.Float                                            274           2   0.0    0.0     0.0    0.0
- CAF                     GHC.Handle                                           252           2   0.0    0.0     0.0    0.0
- CAF                     GHC.Conc                                             251           1   0.0    0.0     0.0    0.0
- CAF:sigmoidFunction_r151 Backpropagation                                      213           1   0.0    0.0     0.0    0.0
-  sigmoidFunction        Neuron                                               374           2   0.0    0.0     0.0    0.0
- CAF:biasNeuron          Neuron                                               203           1   0.0    0.0     0.0    0.0
-  biasNeuron             Neuron                                               344           1   0.0    0.0     0.0    0.0
- CAF:defaultNeuron       Neuron                                               202           1   0.0    0.0     0.0    0.0
-  defaultNeuron          Neuron                                               367           1   0.0    0.0     0.0    0.0
- CAF:lvl20_rHW           Neuron                                               201           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               355           0   0.0    0.0     0.0    0.0
- CAF:lvl19_rHU           Neuron                                               200           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               356           0   0.0    0.0     0.0    0.0
- CAF:lvl17_rHQ           Neuron                                               199           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               357           0   0.0    0.0     0.0    0.0
- CAF:lvl16_rHO           Neuron                                               198           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               358           0   0.0    0.0     0.0    0.0
- CAF:lvl14_rHK           Neuron                                               197           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               359           0   0.0    0.0     0.0    0.0
- CAF:lvl13_rHI           Neuron                                               196           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               360           0   0.0    0.0     0.0    0.0
- CAF:lvl12_rHG           Neuron                                               195           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               361           0   0.0    0.0     0.0    0.0
- CAF:lvl11_rHE           Neuron                                               194           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               362           0   0.0    0.0     0.0    0.0
- CAF:lvl9_rHA            Neuron                                               193           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               363           0   0.0    0.0     0.0    0.0
- CAF:lvl8_rHy            Neuron                                               192           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               364           0   0.0    0.0     0.0    0.0
- CAF:lvl7_rHw            Neuron                                               191           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               365           0   0.0    0.0     0.0    0.0
- CAF:lvl6_rHu            Neuron                                               190           1   0.0    0.0     0.0    0.0
-  showsPrec_arz          Neuron                                               366           0   0.0    0.0     0.0    0.0
+ main                    Main                                                 396           3   0.0    0.0    98.4   98.3
+  staticPPMexample       Main                                                 400          11   0.0    0.0    98.2   98.3
+   getOutputMatrix       Utils                                                475           2   0.0    0.0     0.0    0.0
+   trainNet              Utils                                                406         502   0.0    0.0    97.9   98.1
+    genericTraining      Backpropagation                                      407        5500   0.0    0.0    97.9   98.1
+     outputs             Trainingdata                                         474        5000   0.0    0.0     0.0    0.0
+     inputs              Trainingdata                                         425        5000   0.0    0.0     0.0    0.0
+     backwardPass        Backpropagation                                      412        5000   0.0    0.0    64.5   76.3
+      calcLayerError     Backpropagation                                      473       55000   0.5    0.1     1.1    0.2
+       calcError         Backpropagation                                      481           0   0.0    0.0     0.3    0.0
+        state            Neuron                                               482      150000   0.3    0.0     0.3    0.0
+       inputSum          Neuron                                               480           0   0.0    0.0     0.0    0.0
+       state             Neuron                                               479           0   0.0    0.0     0.0    0.0
+       weights           Neuron                                               478           0   0.0    0.0     0.0    0.0
+       deltaWeights      Neuron                                               477           0   0.0    0.0     0.0    0.0
+       bias              Neuron                                               476       50000   0.3    0.0     0.3    0.0
+      backPassSteps      Backpropagation                                      413       15000   0.0    0.0    63.4   76.1
+       updateLayerWeights Backpropagation                                      439      115000   0.5    0.1    15.5   27.0
+        weights          Neuron                                               463           0   0.0    0.0     0.0    0.0
+        deltaWeights     Neuron                                               462           0   0.0    0.0     0.0    0.0
+        updateNeuronWeights Backpropagation                                      441      105000  14.7   26.6    15.0   26.8
+         setWeights      Neuron                                               442      105000   0.0    0.1     0.3    0.2
+          weights        Neuron                                               459        5000   0.0    0.0     0.0    0.0
+          inputSum       Neuron                                               447           0   0.0    0.0     0.0    0.0
+          state          Neuron                                               446           0   0.0    0.0     0.0    0.0
+          delta          Neuron                                               445           0   0.0    0.0     0.0    0.0
+          deltaWeights   Neuron                                               444           0   0.0    0.0     0.0    0.0
+          bias           Neuron                                               443      105000   0.3    0.0     0.3    0.0
+       calcLayerDeltaWeigts Backpropagation                                      437      115000   0.5    0.2    41.8   41.9
+        deltaWeights     Neuron                                               483        5000   0.0    0.0     0.0    0.0
+        calcNeuronDeltaWeights Backpropagation                                      464           0   0.0    0.0    41.3   41.5
+         calcDeltaWeight Backpropagation                                      468    19400000  26.6   26.6    28.7   26.6
+          delta          Neuron                                               471    19300000   2.1    0.0     2.1    0.0
+         makeStateListOfLayer Backpropagation                                      466      100000   8.9   10.0    12.6   14.9
+          state          Neuron                                               467           0   3.7    5.0     3.7    5.0
+         deltaWeights    Neuron                                               465      100000   0.0    0.0     0.0    0.0
+        inputSum         Neuron                                               452           0   0.0    0.0     0.0    0.0
+        state            Neuron                                               451           0   0.0    0.0     0.0    0.0
+        weights          Neuron                                               450           0   0.0    0.0     0.0    0.0
+        delta            Neuron                                               449           0   0.0    0.0     0.0    0.0
+        bias             Neuron                                               448      105000   0.0    0.0     0.0    0.0
+       calcLayerDelta    Backpropagation                                      415     1940000   3.9    4.7     6.1    7.3
+        calcNeuronDelta  Backpropagation                                      434           0   0.0    0.0     1.8    0.1
+         getDeltaStateSumForWeight Backpropagation                                      436      554488   1.3    0.1     1.8    0.1
+          weights        Neuron                                               458      504114   0.5    0.0     0.5    0.0
+          delta          Neuron                                               440      504114   0.0    0.0     0.0    0.0
+         state           Neuron                                               435      100748   0.0    0.0     0.0    0.0
+        inputSum         Neuron                                               421           0   0.0    0.5     0.0    0.5
+        state            Neuron                                               420           0   0.0    0.5     0.0    0.5
+        weights          Neuron                                               419           0   0.0    0.5     0.0    0.5
+        deltaWeights     Neuron                                               418           0   0.0    0.5     0.0    0.5
+        bias             Neuron                                               417       50376   0.3    0.5     0.3    0.5
+     forwardPass         Backpropagation                                      410       15000   0.0    0.0    26.3   15.8
+      calcLayer          Backpropagation                                      438      115000   0.3    0.2    26.3   15.8
+       sigmoidFunction   Neuron                                               472      104985   0.5    0.3     0.5    0.3
+       calcNeuron        Backpropagation                                      469    19400000  22.4   14.9    25.5   14.9
+        state            Neuron                                               470    19300000   3.2    0.0     3.2    0.0
+       updateNeuron      Neuron                                               454      105000   0.0    0.2     0.0    0.3
+        weights          Neuron                                               460        5000   0.0    0.0     0.0    0.0
+        delta            Neuron                                               457           0   0.0    0.0     0.0    0.0
+        deltaWeights     Neuron                                               456           0   0.0    0.0     0.0    0.0
+        bias             Neuron                                               455      210021   0.0    0.0     0.0    0.0
+       weights           Neuron                                               453      100000   0.0    0.0     0.0    0.0
+     setTrainToInputLayer Backpropagation                                      409        5000   0.0    0.0     7.1    6.0
+      setTrainToNeuron   Backpropagation                                      424     1875000   1.3    1.8     7.1    6.0
+       setState          Neuron                                               426     1870000   2.1    1.8     5.8    4.2
+        inputSum         Neuron                                               431           0   1.8    0.5     1.8    0.5
+        weights          Neuron                                               430           0   0.3    0.5     0.3    0.5
+        delta            Neuron                                               429           0   0.0    0.5     0.0    0.5
+        deltaWeights     Neuron                                               428           0   1.1    0.5     1.1    0.5
+        bias             Neuron                                               427     1870000   0.5    0.5     0.5    0.5
+      bias               Neuron                                               416       10000   0.0    0.0     0.0    0.0
+     learnSteps          Trainingdata                                         408        5000   0.0    0.0     0.0    0.0
+   readPPMFile           GraphicInterface                                     401          10   0.0    0.0     0.3    0.2
+    normalize            GraphicInterface                                     432        3740   0.3    0.2     0.3    0.2
+  readI                  Utils                                                399           1   0.0    0.0     0.0    0.0
+  universalUseCase       Main                                                 398           1   0.3    0.0     0.3    0.0
+   showError             Utils                                                484           1   0.0    0.0     0.0    0.0
+    delta                Neuron                                               485           0   0.0    0.0     0.0    0.0
+   saveWeights           Utils                                                404           1   0.0    0.0     0.0    0.0
+ CAF                     Main                                                 390         281   0.0    0.0     1.6    1.7
+  showList_a47R          Neuron                                               414           3   0.0    0.0     1.6    1.7
+   showsPrec_a47I        Neuron                                               422        1981   1.6    1.7     1.6    1.7
+  nnet                   Main                                                 411           2   0.0    0.0     0.0    0.0
+  staticPPMexample       Main                                                 402           0   0.0    0.0     0.0    0.0
+  main                   Main                                                 397           0   0.0    0.0     0.0    0.0
+ CAF                     Data.Typeable                                        388           1   0.0    0.0     0.0    0.0
+ CAF                     GHC.Show                                             386           3   0.0    0.0     0.0    0.0
+ CAF                     GHC.IO.Exception                                     382           3   0.0    0.0     0.0    0.0
+ CAF                     GHC.Read                                             367           2   0.0    0.0     0.0    0.0
+ CAF                     GHC.Float                                            366           2   0.0    0.0     0.0    0.0
+ CAF                     Text.Read.Lex                                        355           8   0.0    0.0     0.0    0.0
+ CAF                     Data.HashTable                                       329           2   0.0    0.0     0.0    0.0
+ CAF                     GHC.IO.Handle.FD                                     327           2   0.0    0.0     0.0    0.0
+ CAF                     System.Posix.Internals                               326           7   0.0    0.0     0.0    0.0
+ CAF                     GHC.IO.FD                                            311           5   0.0    0.0     0.0    0.0
+ CAF                     GHC.Conc                                             310           1   0.0    0.0     0.0    0.0
+ CAF                     GHC.IO.Handle.Internals                              301           1   0.0    0.0     0.0    0.0
+ CAF                     GHC.IO.Encoding.Iconv                                295           6   0.0    0.0     0.0    0.0
+ CAF                     GraphicInterface                                     292           1   0.0    0.0     0.0    0.0
+ CAF                     Utils                                                287           3   0.0    0.0     0.0    0.0
+  showError              Utils                                                486           0   0.0    0.0     0.0    0.0
+  saveWeights            Utils                                                405           0   0.0    0.0     0.0    0.0
+ CAF                     Config                                               285           1   0.0    0.0     0.0    0.0
+  dataPath               Config                                               403           1   0.0    0.0     0.0    0.0
+ CAF                     Neuron                                               282          12   0.0    0.0     0.0    0.0
+  showsPrec_a47I         Neuron                                               423           0   0.0    0.0     0.0    0.0
+ CAF                     Backpropagation                                      252           1   0.0    0.0     0.0    0.0
+  sigmoidFunction        Neuron                                               461           3   0.0    0.0     0.0    0.0
+ CAF                     System.Environment                                   229           2   0.0    0.0     0.0    0.0
