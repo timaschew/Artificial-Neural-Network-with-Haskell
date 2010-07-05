@@ -38,7 +38,7 @@ How-To-Read
 3 = backwardPass = calculate whole network (change and update layer like forwardPass)
 3a	{ calcLayerDeltaWeigts = calculate weight-deltas between layer N and N-1
 		{ calcNeuronDeltaWeights = calculate weight-deltas between one neuron N1 of layer N and whole layer N-1
-			{ calcDeltaWeight = calculate formula for neuron N1 }}
+			{ calcDeltaWeight = calculate formula for neuron N1 }}
 3b	  updateLayerWeights = update weights of a layer X
 	  	{ updateNeuronWeights = update weights of one neuron of layer X}
 3c	  calcLayerDelta = calculate delta / error for layer X (like step 2, but only for hidden layer)
