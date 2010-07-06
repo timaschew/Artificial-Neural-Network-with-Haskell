@@ -64,6 +64,7 @@ main = do
 		
 		"ref" -> refUseCase steps saveAction
 		"demo2" -> demo2 steps
+		"demo3" -> demo3 steps
 		"demo57" -> demo57 steps
 
 test :: [Double] -> Double
@@ -228,6 +229,17 @@ demo79 = do
 	showNumsOutput net path
 	putStrLn "----------------------------------"
 	showNumsOutput net "traindata/img/raw/7_9_times/"
+
+-- 35x45 = 1575 pixel
+demo3 steps = do
+	let path = "traindata/img/35_45_times/"
+	tdata <- dirToTrainData (dataPath ++ path)
+	nt <- initNetworkFromTdata tdata
+	let net = trainNet nt tdata steps
+	showNumsOutput net path
+	putStrLn "----------------------------------"
+	showNumsOutput net "traindata/img/35_45_lucida/"
+
 
 -- problems with B?
 

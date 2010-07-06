@@ -73,7 +73,7 @@ genericTraining net t i = genericTraining trainedNet t loop where
 	outputTraining = (outputs t) !! i
 	
 	readyNet = setTrainToInputLayer net inputTraining
-	forwarded = forwardPass readyNet []
+	forwarded = forwardPass readyNet
 	trainedNet = backwardPass forwarded outputTraining
 	--trainedNet = forwarded
 	loop	| i == ((learnSteps t)-1) = (-1)
@@ -87,10 +87,10 @@ setTrainToInputLayer net train = updatedNet where
 	inputNeurons	| ((bias (head inputLayer)) == True) = tail inputLayer
 			| otherwise = inputLayer -- no bias use whole layer
 	updatedInputLayer = setTrainToNeuron inputNeurons train
-	readyLayer | ((bias (head inputLayer)) == True) = [head inputLayer] ++ updatedInputLayer
+	readyLayer | ((bias (head inputLayer)) == True) = (head inputLayer) : updatedInputLayer
 			| otherwise = updatedInputLayer
 	-- use old net but update readyLayer (drop and append updated)
-	updatedNet = [readyLayer] ++ (drop 1 net)
+	updatedNet = readyLayer : (drop 1 net)
 
 -- update the state of one neuron recursivly
 setTrainToNeuron :: [Neuron] -> TrainData -> [Neuron]
@@ -103,13 +103,27 @@ setEmptyNeurons layer = foldl' (\list n -> (setState n 0) : list) [] (reverse la
 -- use this method to do the 1. algo step. Example: printNet forwardPass network [[]] 
 -- @params: currentNet newNet
 -- @return new network without the input layer (input layer dont have to be calculated)
+{--
 forwardPass :: Network -> Network -> Network
 forwardPass [last] c = c ++ [last]
 forwardPass (l:net) c =  forwardPass updatedLs tmp where 
 	nextLayer = head net
 	updatedNextLayer = calcLayer l nextLayer
-	updatedLs = [updatedNextLayer] ++ (drop 1 net)
+	updatedLs = updatedNextLayer : (drop 1 net)
 	tmp = c ++ [l]
+--}
+
+forwardPass :: Network -> Network
+forwardPass [] = []
+forwardPass (l:net) = l : forwardPass updatedLs where
+	nextLayer | length net > 0 = head net
+			  | otherwise = []
+	updatedNextLayer | length net > 0 = calcLayer l nextLayer
+					 | otherwise = []
+	updatedLs | length net > 0 = updatedNextLayer : (drop 1 net)
+			  | otherwise = []
+
+
 
 -- preparing stuff for backPassSteps
 -- calculate error (delta of output layer)
@@ -121,14 +135,14 @@ backwardPass net train = trainedNet where
 	calcedErrorLayer = calcLayerError outputlayer train -- calc output error
 	updatedNet = (init net) ++ [calcedErrorLayer] -- updating output layer
 	reversedNet = reverse updatedNet --
-	reversedTrainedNet = backPassSteps reversedNet []
+	reversedTrainedNet = backPassSteps reversedNet
 	trainedNet = reverse reversedTrainedNet
 
 -- do steps 3a, 3b, 3c, network is used reversed
 -- stop at input layer, no calculation needed to this layer
-backPassSteps :: Network -> Network -> Network
-backPassSteps [lastLayer] c = c ++ [lastLayer] -- this is the input layer
-backPassSteps (l:net) c = backPassSteps updatedNet tmp where 
+backPassSteps :: Network -> Network
+backPassSteps [lastLayer] = [lastLayer] -- this is the input layer
+backPassSteps (l:net) = newest_l : backPassSteps updatedNet where 
 	-- in first recursion:
 	-- first element (l) is the output layer (real last layer)
 	-- because net was reverse in backwardPass
@@ -138,8 +152,7 @@ backPassSteps (l:net) c = backPassSteps updatedNet tmp where
 	newest_l = updateLayerWeights new_l				-- step 3b
 	new_nextLayer = calcLayerDelta nextLayer newest_l	-- step 3c
 
-	updatedNet = [new_nextLayer] ++ (drop 1 net)
-	tmp = c ++ [newest_l]
+	updatedNet = new_nextLayer : (drop 1 net)
 	
 --
 -- FORWARD PASS (step 1)
@@ -167,8 +180,9 @@ calcLayerHelper n ll = updatedNeuron where
 -- @return Double: netinput (sum) for a certain Neuron of layer n + 1
 calcNeuron :: [Neuron] -> [Double] -> Double
 calcNeuron states weights = result where
-	l = zipWith (\s w -> (state s) * w) states weights
-	result = sum l
+	list = zipWith (\s w -> (state s) * w) states weights
+	result = sum list
+	--result = foldl' (+) 0 list
 --
 -- CALCULATE ERROR (step 2)
 --
@@ -234,7 +248,7 @@ updateNeuronWeights neuron w deltaW = updatedNeuron where
 -- sum up the delta * weight_i of a neuron
 getDeltaStateSumForWeight :: Int -> [Neuron] -> Double
 getDeltaStateSumForWeight i rl = result where
-	deltaStateList = foldl' (\list n -> ((delta n) * ((weights n) !! i)) : list) [] (reverse rl)
+	deltaStateList = foldl' (\list n -> ((delta n) * ((weights n) !! i)) : list) [] rl -- NOTE: no reverse  needed here
 	result = sum deltaStateList
 
 -- calculate the delta for a layer (not for output layer)

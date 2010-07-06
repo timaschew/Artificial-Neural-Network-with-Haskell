@@ -235,7 +235,7 @@ trainNet net tdata steps = trainNet trained tdata (steps-1) where
 work :: Network -> TrainData -> [Double]
 work net inputData = result where
 	inputted = setTrainToInputLayer net inputData
-	forwarded = forwardPass inputted []
+	forwarded = forwardPass inputted
 	result = makeStateListOfLayer (last forwarded)
 
 
