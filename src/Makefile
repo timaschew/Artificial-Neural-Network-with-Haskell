@@ -1,19 +1,35 @@
-ref:
-	./Main "ref" 100
+# configuration
+COMP		= ghc
+COMP_OPT	= -O2 -auto-all -prof	# --fforce-recomp -Wall
+RUN		= ./Main
+RUN_OPT		= +RTS -H1024M -prof -sstderr
+BIN		= Main Gui
 
+
+# actions
 run1:
-#	./Main +RTS -prof
-	./Main "demo2" 500 +RTS -H256M -prof
+	$(RUN) demo2 500 $(RUN_OPT)
 	
 run2:
-#	./Main "demo2" 500 +RTS -H256M -prof
-	./Main "demo2" 1000 +RTS -H256M -prof -sstderr
+#	./Main demo2 1000 +RTS -H256M -prof -sstderr
+	$(RUN) demo2 1000 $(RUN_OPT)
 
+run3:
+	$(RUN) pgm1 10 $(RUN_OPT)
+
+ref:
+	$(RUN) ref 100
+
+gui:	Gui.hs
+	$(COMP) --make $+ && ./Gui
+
+# run default action
 run:
 	make clean && make compile && make run2
 
-compile:
-	ghc -O2 --make Main.hs -prof -auto-all
+compile: Main.hs
+	$(COMP) $(COMP_OPT) --make Main.hs 
+#	ghc -O2 --make Main.hs -prof -auto-all
 
 clean:
-	rm *.o *.hi Main
+	touch Main Gui && rm *.o *.hi $(BIN)
