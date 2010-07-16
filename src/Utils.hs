@@ -225,9 +225,10 @@ initTraindata filename = do
 -- the function / algorithm is very slow :(
 -- 5000 * 4 steps ~ 16 seconds (on a macbook 2GHz)
 trainNet :: Network -> Trainingdata -> Int -> Network
-trainNet net tdata 0 = {-# SCC "trainNet" #-} net
-trainNet net tdata steps = trainNet trained tdata (steps-1) where
+trainNet net tdata 0 = net
+trainNet net tdata steps = trainNet (seq trained trained) tdata (steps-1) where
 	trained = genericTraining net tdata 0
+	notNeed = seq trained 1
 	
 
 -- how to use:
