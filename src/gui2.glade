@@ -124,11 +124,8 @@
                           <widget class="GtkAlignment" id="alignment2">
                             <property name="visible">True</property>
                             <child>
-                              <widget class="GtkImage" id="image1">
+                              <widget class="GtkDrawingArea" id="drawingarea1">
                                 <property name="visible">True</property>
-                                <property name="xpad">50</property>
-                                <property name="ypad">50</property>
-                                <property name="stock">gtk-missing-image</property>
                               </widget>
                             </child>
                           </widget>
@@ -419,6 +416,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
+                    <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                   </widget>
                   <packing>
@@ -480,6 +478,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
+                    <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                   </widget>
                   <packing>
@@ -533,7 +532,15 @@
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
+                  <widget class="GtkLabel" id="label13">
+                    <property name="visible">True</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">2</property>
+                    <property name="right_attach">3</property>
+                    <property name="top_attach">2</property>
+                    <property name="bottom_attach">3</property>
+                  </packing>
                 </child>
               </widget>
               <packing>
