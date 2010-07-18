@@ -1,4 +1,19 @@
 module Main where
+
+-- ANN
+import Neuron
+import Trainingdata
+import Backpropagation
+import Utils
+import Config
+import TopologyParser
+import TraindataParser
+import GraphicInterface
+
+import Data.IORef
+import Control.Concurrent
+
+-- Gui
 import Graphics.Rendering.Cairo
 import Graphics.UI.Gtk
 import Graphics.UI.Gtk.Abstract.Widget
@@ -6,28 +21,28 @@ import Graphics.UI.Gtk.Glade
 import Control.Monad
 
 
+-- TODO:
+	-- take only hidden und bias values. input and output size are dependend from tdata.
+	-- set momentun + lernrate with values set by gui (pass values to backpropagation algo???)
+	-- button to reset the trained net
+	-- setable traindata and pattern
+	-- normalize canvas
+	-- print result / log
+	-- set network on tdata load (file menue)
+	-- forkIO on work
+
+main :: IO()
 main = do
+
+------------------------------------------------------------------------
+-- LOAD WIDGETS FROM XML
+
     initGUI
     Just xml    <- xmlNew "gui2.glade"
     window      <- xmlGetWidget xml castToWindow "window1"
     
     -- drawing area
     darea <- xmlGetWidget xml castToDrawingArea "drawingarea1"
-    darea `on` sizeRequest $ return (Requisition 120 160)
-    darea `on` exposeEvent $ update
-    
-    -- Add mouse listener. 
-    --
-    -- It seems that Button1MotionMask events (and clicks in general) are not
-    -- passed to the modifier, so we work around this (bug?) by forcing the
-    -- user to type shift for drawing. Maybe I just don't understand some nifty
-    -- detail of the event system of GTK. 
-    --
-    -- See http://www.haskell.org/gtk2hs/docs/gtk-docs-0.11.0/
-    --     Graphics-UI-Gtk-Abstract-Widget.html#7
-    -- for more information.
-    widgetAddEvents darea [ButtonPressMask,PointerMotionMask]
-    (darea `on` motionNotifyEvent) (button darea)
     
     -- buttons
     train_button <- xmlGetWidget xml castToButton "button1"
@@ -58,17 +73,52 @@ main = do
     biasInput_check <- xmlGetWidget xml castToCheckButton "checkbutton1"
     biasHidden_check <- xmlGetWidget xml castToCheckButton "checkbutton2" 
      
-    -- register events
-    onClicked train_button (button1Clicked )
-    onClicked work_button button2Clicked
-    onClicked clear_button (clear darea)--(button3Clicked result_label)
+------------------------------------------------------------------------
+-- ANN, SETTINGS
+        
+    --tdata <- initTraindata (dataPath ++ "traindata/xor/trainingdata")
+    tdata <- dirToTrainData (dataPath ++ "traindata/img/10_12_arial/")
+    tdataIO <- newIORef tdata
+    
+    --net <- initNetwork "4b\n10b\n1"
+    net <- initNetworkFromTdata tdata
+    netIO <- newIORef net
+    
+    --let pattern = [1.0, 0.0]
+    pattern <- readPPMFile (dataPath ++ "traindata/img/10_12_great_times/" ++ "6.pgm")
+    patternIO <- newIORef pattern
+    
+    momentum <- spinButtonGetValueAsInt momentum_spin
+    momentumIO <- newIORef momentum
+    
+    learningRate <- spinButtonGetValueAsInt learningRate_spin
+    learningRateIO <- newIORef learningRate
+    
+    hiddenNeurons <- spinButtonGetValueAsInt hiddenNeurons_spin
+    hiddenNeuronsIO <- newIORef hiddenNeurons
+    
+    cycles <- spinButtonGetValueAsInt cycles_spin
+    cyclesIO <- newIORef cycles
+    
+    biasInput <- toggleButtonGetMode biasInput_check
+    biasInputIO <- newIORef biasInput
+    
+    biasHidden <- toggleButtonGetMode biasHidden_check
+    biasHiddenIO <- newIORef biasHidden
+    
+------------------------------------------------------------------------
+-- REGISTER EVENTS
+
+    onClicked train_button (trainButtonClicked netIO tdataIO cyclesIO)
+    onClicked work_button (workButtonClicked netIO patternIO)
+    onClicked clear_button (clearButtonClicked darea)
          
     onValueSpinned momentum_spin (valueSpinned1 momentum_spin)
     onValueSpinned learningRate_spin (valueSpinned2 learningRate_spin)
     onValueSpinned inputNeurons_spin (valueSpinned3 inputNeurons_spin)
     onValueSpinned hiddenNeurons_spin (valueSpinned4 hiddenNeurons_spin)
     onValueSpinned outputNeurons_spin (valueSpinned5 outputNeurons_spin)
-    onValueSpinned cycles_spin (valueSpinned6 cycles_spin)
+    onValueSpinned cycles_spin (valueSpinned6 cycles_spin cyclesIO)
     
     afterActivateLeaf menuitem1 menuItem1Select
     afterActivateLeaf menuitem2 menuItem2Select
@@ -76,19 +126,51 @@ main = do
     afterActivateLeaf menuitem4 menuItem4Select
     afterActivateLeaf menuitem5 menuItem5Select
     
+    onToggled biasInput_check (onToggledInputBias biasInput_check biasInputIO)
+    onToggled biasHidden_check (onToggledHiddenBias biasHidden_check biasHiddenIO)
+    
+    darea `on` sizeRequest $ return (Requisition 120 160)
+    darea `on` exposeEvent $ update
+    
+    -- Add mouse listener. 
+    --
+    -- It seems that Button1MotionMask events (and clicks in general) are not
+    -- passed to the modifier, so we work around this (bug?) by forcing the
+    -- user to type shift for drawing. Maybe I just don't understand some nifty
+    -- detail of the event system of GTK. 
+    --
+    -- See http://www.haskell.org/gtk2hs/docs/gtk-docs-0.11.0/
+    --     Graphics-UI-Gtk-Abstract-Widget.html#7
+    -- for more information.
+    widgetAddEvents darea [ButtonPressMask,PointerMotionMask]
+    (darea `on` motionNotifyEvent) (button darea)
+    
     onDestroy window mainQuit
         
-    -- main GUI
+------------------------------------------------------------------------
+-- SHOW GUI
     widgetShowAll window
     mainGUI
 
 ------------------------------------------------------------------------
 -- EVENTS
 ------------------------------------------------------------------------
-button1Clicked = putStrLn "train button clicked"
-button2Clicked = putStrLn "work button clicked"
+trainButtonClicked netIO tdataIO cyclesIO = do
+	nn <- readIORef netIO
+	td <- readIORef tdataIO
+	cycles <- readIORef cyclesIO
+	
+	let trainedNet = trainNet nn td cycles
+	modifyIORef netIO (\_ -> trainedNet)
+	putStrLn ("network trained!")
+	
+workButtonClicked netIO patternIO = do --putStrLn "work button clicked"
+	trainedNet <- readIORef netIO
+	pattern <- readIORef patternIO
+	print (work trainedNet pattern)
+
 button3Clicked label = do
-    set label [ labelText := getResult ] --putStrLn "clear button clicked"
+    set label [ labelText := "YES" ] --putStrLn "clear button clicked"
 
 valueSpinned1 widget = do
 	value <- spinButtonGetValue widget
@@ -110,8 +192,9 @@ valueSpinned5 widget = do
 	value <- spinButtonGetValueAsInt widget
 	putStrLn ("output neuron count spinned: " ++ show value)
 
-valueSpinned6 widget = do
+valueSpinned6 widget cyclesIO = do
 	value <- spinButtonGetValueAsInt widget
+	modifyIORef cyclesIO (\_ -> value)
 	putStrLn ("cycles spinned: " ++ show value)
 
 menuItem1Select = putStrLn "MenuItem1 selected"
@@ -120,11 +203,16 @@ menuItem3Select = putStrLn "MenuItem3 selected"
 menuItem4Select = putStrLn "MenuItem4 selected"
 menuItem5Select = putStrLn "MenuItem5 selected"
 
-------------------------------------------------------------------------
--- METHODS
-------------------------------------------------------------------------
-getResult = "YES!"
+onToggledInputBias cb biasInputIO = do
+	value <- toggleButtonGetActive cb
+	modifyIORef biasInputIO (\_ -> value)
+	putStrLn("biasInput toogled: " ++ show value)
 
+onToggledHiddenBias cb biasHiddenIO = do
+	value <- toggleButtonGetActive cb
+	modifyIORef biasHiddenIO (\_ -> value)
+	putStrLn("biasInput toogled: " ++ show value)
+	
 -- Called when the pointer is moved. See the above comment for the unusual
 -- handling of the Shift-Key.
 --
@@ -159,7 +247,7 @@ update = do
 
     return True
 
-clear darea = do
+clearButtonClicked darea = do
     drw <- widgetGetDrawWindow darea
     (w,h) <- drawableGetSize drw
     let width  = realToFrac w
@@ -170,15 +258,3 @@ clear darea = do
         rectangle 0 0 width height
         fill
 
-{--
-updateCanvas :: DrawingArea -> SVG -> Event -> IO Bool
-updateCanvas canvas svg (Expose { eventArea=rect }) = do
-  drawin <- widgetGetDrawWindow canvas
-  let (width, height) = svgGetSize svg
-  (width', height') <- widgetGetSize canvas
-  renderWithDrawable drawin $ do
-    scale (realToFrac width'  / realToFrac width)
-          (realToFrac height' / realToFrac height)
-    svgRender svg
-  return True
---}

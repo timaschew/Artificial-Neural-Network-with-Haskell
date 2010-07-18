@@ -21,6 +21,9 @@ ref:
 	$(RUN) ref 100
 
 gui:	Gui.hs
+	$(RUN) gui 0 $(RUN_OPT)
+
+gui2:	Gui.hs
 	$(COMP) --make $+ && ./Gui
 
 # run default action
