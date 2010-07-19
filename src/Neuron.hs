@@ -1,4 +1,5 @@
 module Neuron where
+import Control.Parallel.Strategies
 
 data Neuron = Neuron {
 	inputSum :: Double, -- sum of all neurons from previous layer
@@ -9,6 +10,9 @@ data Neuron = Neuron {
 	bias :: Bool
 	} deriving (Show, Eq)
 	
+instance NFData Neuron where
+    rnf (Neuron a b c d e f) = rnf (a,b,c,d,e,f)
+
 type Network = [[Neuron]]
 
  -- bias

@@ -69,7 +69,8 @@ momentum = 0.15
 -- important to use zero for last parameter
 genericTraining :: Network -> Trainingdata -> Int -> Network
 genericTraining net t (-1) = net -- stop here
-genericTraining net t i = genericTraining (seq trainedNet trainedNet) t loop where
+genericTraining net t i = 
+    rnf trainedNet `seq` genericTraining trainedNet t loop where
 	inputTraining = (inputs t) !! i
 	outputTraining = (outputs t) !! i
 	
