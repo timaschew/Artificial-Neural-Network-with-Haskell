@@ -35,4 +35,4 @@ compile: Main.hs
 #	ghc -O2 --make Main.hs -prof -auto-all
 
 clean:
-	touch Main Gui && rm *.o *.hi $(BIN)
+	touch $(BIN) && rm *.o *.hi $(BIN)

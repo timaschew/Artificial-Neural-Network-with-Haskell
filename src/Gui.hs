@@ -12,6 +12,11 @@ import GraphicInterface
 
 import Data.IORef
 import Control.Concurrent
+import Data.List
+import Maybe
+--Could not find module `Graphics.UI.Gtk.General.Structs':
+--     it is a hidden module in the package `gtk-0.11.0'
+--import Graphics.UI.Gtk.General.Structs (Rectangle(..))
 
 -- Gui
 import Graphics.Rendering.Cairo
@@ -22,14 +27,12 @@ import Control.Monad
 
 
 -- TODO:
-	-- take only hidden und bias values. input and output size are dependend from tdata.
 	-- set momentun + lernrate with values set by gui (pass values to backpropagation algo???)
 	-- button to reset the trained net
-	-- setable traindata and pattern
-	-- normalize canvas
+	-- normalize canvas with pixbufGetFromDrawable?
 	-- print result / log
-	-- set network on tdata load (file menue)
 	-- forkIO on work
+
 
 main :: IO()
 main = do
@@ -38,7 +41,7 @@ main = do
 -- LOAD WIDGETS FROM XML
 
     initGUI
-    Just xml    <- xmlNew "gui2.glade"
+    Just xml    <- xmlNew "gui.glade"
     window      <- xmlGetWidget xml castToWindow "window1"
     
     -- drawing area
@@ -65,9 +68,9 @@ main = do
     -- menuitems
     menuitem1 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem1"
     menuitem2 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem2"
-    menuitem3 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem3"
-    menuitem4 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem4"
-    menuitem5 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem5"
+    --menuitem3 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem3"
+    --menuitem4 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem4"
+    --menuitem5 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem5"
 
 	-- checkbutton
     biasInput_check <- xmlGetWidget xml castToCheckButton "checkbutton1"
@@ -76,55 +79,89 @@ main = do
 ------------------------------------------------------------------------
 -- ANN, SETTINGS
         
+    tdataPathIO <- newIORef (dataPath ++ "traindata/img/10_12_arial/")
+    patternPathIO <- newIORef ""
+                
     --tdata <- initTraindata (dataPath ++ "traindata/xor/trainingdata")
-    tdata <- dirToTrainData (dataPath ++ "traindata/img/10_12_arial/")
+    tdataPath <- readIORef tdataPathIO
+    tdata <- dirToTrainData tdataPath
     tdataIO <- newIORef tdata
     
+    biasInput <- toggleButtonGetActive biasInput_check
+    biasInputIO <- newIORef biasInput
+    
+    biasHidden <- toggleButtonGetActive biasHidden_check
+    biasHiddenIO <- newIORef biasHidden
+    
+    hiddenNeurons <- spinButtonGetValueAsInt hiddenNeurons_spin
+    hiddenNeuronsIO <- newIORef hiddenNeurons
+    
     --net <- initNetwork "4b\n10b\n1"
-    net <- initNetworkFromTdata tdata
+    net <- initNetwork (genTopologyStr tdata biasInput biasHidden hiddenNeurons)
     netIO <- newIORef net
+    updateNetworkSize tdata inputNeurons_spin outputNeurons_spin
     
     --let pattern = [1.0, 0.0]
-    pattern <- readPPMFile (dataPath ++ "traindata/img/10_12_great_times/" ++ "6.pgm")
+    pattern <- readPPMFile (dataPath ++ "traindata/img/10_12_great_times/" ++ "1.pgm")
     patternIO <- newIORef pattern
-    
+
     momentum <- spinButtonGetValueAsInt momentum_spin
     momentumIO <- newIORef momentum
     
     learningRate <- spinButtonGetValueAsInt learningRate_spin
     learningRateIO <- newIORef learningRate
     
-    hiddenNeurons <- spinButtonGetValueAsInt hiddenNeurons_spin
-    hiddenNeuronsIO <- newIORef hiddenNeurons
-    
     cycles <- spinButtonGetValueAsInt cycles_spin
     cyclesIO <- newIORef cycles
     
-    biasInput <- toggleButtonGetMode biasInput_check
-    biasInputIO <- newIORef biasInput
+    --textViewSetBuffer textview appendText
+    resultListIO <- newIORef [0.0]
     
-    biasHidden <- toggleButtonGetMode biasHidden_check
-    biasHiddenIO <- newIORef biasHidden
-    
+    --pixbuf <- Rectangle 0 0 120 160 --pixbufGetFromDrawable darea (Rectangle 0 0 120 160)
 ------------------------------------------------------------------------
 -- REGISTER EVENTS
 
     onClicked train_button (trainButtonClicked netIO tdataIO cyclesIO)
-    onClicked work_button (workButtonClicked netIO patternIO)
+    onClicked work_button (workButtonClicked netIO patternIO tdataPathIO resultListIO result_label)
     onClicked clear_button (clearButtonClicked darea)
          
     onValueSpinned momentum_spin (valueSpinned1 momentum_spin)
     onValueSpinned learningRate_spin (valueSpinned2 learningRate_spin)
-    onValueSpinned inputNeurons_spin (valueSpinned3 inputNeurons_spin)
+    --onValueSpinned inputNeurons_spin (valueSpinned3 inputNeurons_spin)
     onValueSpinned hiddenNeurons_spin (valueSpinned4 hiddenNeurons_spin)
-    onValueSpinned outputNeurons_spin (valueSpinned5 outputNeurons_spin)
+    --onValueSpinned outputNeurons_spin (valueSpinned5 outputNeurons_spin)
     onValueSpinned cycles_spin (valueSpinned6 cycles_spin cyclesIO)
     
-    afterActivateLeaf menuitem1 menuItem1Select
-    afterActivateLeaf menuitem2 menuItem2Select
-    afterActivateLeaf menuitem3 menuItem3Select
-    afterActivateLeaf menuitem4 menuItem4Select
-    afterActivateLeaf menuitem5 menuItem5Select
+    afterActivateLeaf menuitem1 $do
+		openFileDialog window "Please choose the pattern file" patternPathIO
+		path <- readIORef patternPathIO
+		pattern <- readPPMFile path
+		modifyIORef patternIO (\_ -> pattern)
+		putStrLn ("pattern file path: " ++ path)
+		
+    afterActivateLeaf menuitem2 $do
+		openFolderDialog window "Please choose the tdata path" tdataPathIO
+		path <- readIORef tdataPathIO
+		-- update tdata
+		tdata <- dirToTrainData (path ++ "/")
+		modifyIORef tdataIO (\_ -> tdata)
+		-- updata network
+		b1 <- toggleButtonGetActive biasInput_check
+		b2 <- toggleButtonGetActive biasHidden_check
+		hiddenLen <- spinButtonGetValueAsInt hiddenNeurons_spin
+		net <- initNetwork $ genTopologyStr tdata b1 b2 hiddenLen
+		modifyIORef netIO (\_ -> net)
+		-- update network size
+		updateNetworkSize tdata inputNeurons_spin outputNeurons_spin
+		-- update result label
+		setLabel result_label "--"
+		
+		putStrLn ("network: " ++ genTopologyStr tdata b1 b2 hiddenLen)
+		putStrLn ("tdata path: " ++ path)
+    
+    --afterActivateLeaf menuitem3 (menuItem3Select window "Please choose..." tdataPathIO)--menuItem3Select
+    --afterActivateLeaf menuitem4 (menuItem4Select window "Please choose..." tdataPathIO)--menuItem4Select
+    --afterActivateLeaf menuitem5 (menuItem5Select window "Please choose..." tdataPathIO)--menuItem5Select
     
     onToggled biasInput_check (onToggledInputBias biasInput_check biasInputIO)
     onToggled biasHidden_check (onToggledHiddenBias biasHidden_check biasHiddenIO)
@@ -164,13 +201,26 @@ trainButtonClicked netIO tdataIO cyclesIO = do
 	modifyIORef netIO (\_ -> trainedNet)
 	putStrLn ("network trained!")
 	
-workButtonClicked netIO patternIO = do --putStrLn "work button clicked"
+workButtonClicked netIO patternIO tdataPathIO resultListIO result_label = do --putStrLn "work button clicked"
 	trainedNet <- readIORef netIO
 	pattern <- readIORef patternIO
-	print (work trainedNet pattern)
+	path <- readIORef tdataPathIO
+	
+	let resultList = work trainedNet pattern
+	let bestVal = maximum resultList
+	let bestIdx = bestVal `elemIndex` resultList
+	
+	pgmList <- getPgmList path
+	let list = map (\x -> fst (break (=='.') x)) pgmList	-- get filenames before dot: 0.ppm => 0
+	
+	modifyIORef resultListIO (\_ -> resultList)
+	--putStrLn ("its a: " ++ list !! (fromJust bestIdx))
+	setLabel result_label (list !! (fromJust bestIdx))
+	putStrLn ("index: " ++ show (fromJust bestIdx) ++ " bestVal: " ++ show bestVal) -- ++ show resultList)
+	putStrLn $ show resultList
 
-button3Clicked label = do
-    set label [ labelText := "YES" ] --putStrLn "clear button clicked"
+setLabel label text = do
+    set label [ labelText := text ] --putStrLn "clear button clicked"
 
 valueSpinned1 widget = do
 	value <- spinButtonGetValue widget
@@ -197,11 +247,20 @@ valueSpinned6 widget cyclesIO = do
 	modifyIORef cyclesIO (\_ -> value)
 	putStrLn ("cycles spinned: " ++ show value)
 
-menuItem1Select = putStrLn "MenuItem1 selected"
-menuItem2Select = putStrLn "MenuItem2 selected"
-menuItem3Select = putStrLn "MenuItem3 selected"
-menuItem4Select = putStrLn "MenuItem4 selected"
-menuItem5Select = putStrLn "MenuItem5 selected"
+menuItem3Select window title pathIO = do
+	openFileDialog window "Please chose a tdata File or Path" pathIO
+	path <- readIORef pathIO
+	putStrLn ("MenuItem1 selected, path: " ++ path)
+	
+menuItem4Select window title pathIO = do
+	openFileDialog window "Please chose a tdata File or Path" pathIO
+	path <- readIORef pathIO
+	putStrLn ("MenuItem1 selected, path: " ++ path)
+	
+menuItem5Select window title pathIO = do
+	openFileDialog window "Please chose a tdata File or Path" pathIO
+	path <- readIORef pathIO
+	putStrLn ("MenuItem1 selected, path: " ++ path)
 
 onToggledInputBias cb biasInputIO = do
 	value <- toggleButtonGetActive cb
@@ -258,3 +317,67 @@ clearButtonClicked darea = do
         rectangle 0 0 width height
         fill
 
+
+openFileDialog parentWindow title filePathIO = do
+    dialog <- fileChooserDialogNew 
+                    (Just title)
+                    (Just parentWindow)
+                    FileChooserActionOpen	[("gtk-cancel", ResponseCancel), ("gtk-open", ResponseAccept)]
+    widgetShow dialog
+    resp <- dialogRun dialog
+    case resp of
+        ResponseAccept      -> do filePath <- fileChooserGetFilename dialog
+                                  let path = case filePath of
+                                        (Just s) -> s
+                                        Nothing  -> error "Error on ResponseAccept in openFileDialog"
+                                  modifyIORef filePathIO (\_ -> path)
+        ResponseCancel      -> return ()
+        ResponseDeleteEvent -> return ()
+        _                   -> return ()
+    widgetHide dialog
+
+
+openFolderDialog parentWindow title filePathIO = do
+    dialog <- fileChooserDialogNew 
+                    (Just title)
+                    (Just parentWindow)
+                    FileChooserActionSelectFolder [("gtk-cancel", ResponseCancel), ("gtk-open", ResponseAccept)]
+    widgetShow dialog
+    resp <- dialogRun dialog
+    case resp of
+        ResponseAccept      -> do filePath <- fileChooserGetFilename dialog
+                                  let path = case filePath of
+                                        (Just s) -> s
+                                        Nothing  -> error "Error on ResponseAccept in openFolderDialog"
+                                  modifyIORef filePathIO (\_ -> path)
+        ResponseCancel      -> return ()
+        ResponseDeleteEvent -> return ()
+        _                   -> return ()
+    widgetHide dialog
+    
+genTopologyStr :: Trainingdata -> Bool -> Bool -> Int -> String
+genTopologyStr tdata iBias hBias hiddenLen = do
+	let inputLen = length $ head (inputs tdata)		-- get size of one input
+	let outputLen = length $ head (outputs tdata)	-- get size of one output
+	let b1  | iBias == True = "b"
+			| otherwise = ""
+	let b2  | hBias == True = "b"
+			| otherwise = ""
+
+	(show inputLen ++ b1 ++ "\n" ++ show hiddenLen ++ b2 ++ "\n" ++ show outputLen ++ "\n")
+
+updateNetworkSize tdata inputNeurons_spin outputNeurons_spin = do
+	let inputLen = length $ head (inputs tdata)		-- get size of one input
+	let outputLen = length $ head (outputs tdata)	-- get size of one output
+	spinButtonSetValue inputNeurons_spin (fromIntegral inputLen)
+	spinButtonSetValue outputNeurons_spin (fromIntegral outputLen)
+		
+{--		
+appendText = do
+	table <- textTagTableNew
+    buff <- textBufferNew (Just table)
+    --table <- textTagTableNew
+    
+    --textBufferSetText "hallo"
+    return buff
+--}

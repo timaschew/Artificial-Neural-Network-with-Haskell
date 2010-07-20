@@ -19,7 +19,7 @@
                     <property name="visible">True</property>
                     <child>
                       <widget class="GtkImageMenuItem" id="imagemenuitem1">
-                        <property name="label">Netz &#xF6;ffnen</property>
+                        <property name="label">open pattern file</property>
                         <property name="visible">True</property>
                         <property name="use_stock">False</property>
                         <child internal-child="image">
@@ -33,7 +33,7 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="imagemenuitem2">
-                        <property name="label">Traindata &#xF6;ffnen</property>
+                        <property name="label">open traindata path</property>
                         <property name="visible">True</property>
                         <property name="use_stock">False</property>
                         <child internal-child="image">
@@ -434,7 +434,7 @@
                     <property name="can_focus">True</property>
                     <property name="invisible_char">&#x25CF;</property>
                     <property name="xalign">1</property>
-                    <property name="adjustment">1 1 10000 1 10 10</property>
+                    <property name="adjustment">10 1 10000 1 10 10</property>
                     <property name="climb_rate">10</property>
                   </widget>
                   <packing>

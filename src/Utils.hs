@@ -338,7 +338,7 @@ dirToTrainData path = do
 -- reads every ppm and generates its inputValues from the pixels values
 getPPMInput :: String -> IO [[Double]]
 getPPMInput path = do
-	let fullPath = dataPath ++ path
+	let fullPath = path--dataPath ++ path
 	nameList <- getPgmList fullPath
 	fileList <- mapM readPPMFile (map (\x -> fullPath ++ x) nameList)
 	

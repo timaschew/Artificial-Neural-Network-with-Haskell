@@ -218,7 +218,7 @@ demo57 steps = do
 	let net = trainNet nt tdata steps
 	showNumsOutput net path
 	putStrLn "----------------------------------"
-	showNumsOutput net "traindata/img/raw/5_7_times/"
+	showNumsOutput net "traindata/img/5_7_times/"
 	
 -- 7x9 = 63 pixel
 demo79 = do
