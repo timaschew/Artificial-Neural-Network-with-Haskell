@@ -16,7 +16,7 @@ readPPMFile fn = do
 	let res = words (lineList !! 1)
 	let width = read (res !! 0) :: Int
 	let height = read (res !! 1) :: Int
-	let pixels = drop 4 (words inp)
+	let pixels = concat $ map words (drop 4 lineList)
 	return (map normalize pixels)
 	
 normalize x = norm where
