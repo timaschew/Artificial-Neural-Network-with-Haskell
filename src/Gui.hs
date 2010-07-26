@@ -13,10 +13,9 @@ import GraphicInterface
 import Data.IORef
 import Control.Concurrent
 import Data.List
+import Data.Word
+import Data.Array.Storable
 import Maybe
---Could not find module `Graphics.UI.Gtk.General.Structs':
---     it is a hidden module in the package `gtk-0.11.0'
---import Graphics.UI.Gtk.General.Structs (Rectangle(..))
 
 -- Gui
 import Graphics.Rendering.Cairo
@@ -29,7 +28,7 @@ import Control.Monad
 -- TODO:
 	-- set momentun + lernrate with values set by gui (pass values to backpropagation algo???)
 	-- button to reset the trained net
-	-- normalize canvas with pixbufGetFromDrawable?
+	-- test if pixelbuf array is correct
 	-- print result / log
 	-- forkIO on work
 
@@ -79,6 +78,9 @@ main = do
 ------------------------------------------------------------------------
 -- ANN, SETTINGS
         
+    flip widgetSetSensitivity False inputNeurons_spin    
+    flip widgetSetSensitivity False outputNeurons_spin
+        
     tdataPathIO <- newIORef (dataPath ++ "traindata/img/10_12_arial/")
     patternPathIO <- newIORef ""
                 
@@ -117,13 +119,14 @@ main = do
     --textViewSetBuffer textview appendText
     resultListIO <- newIORef [0.0]
     
-    --pixbuf <- Rectangle 0 0 120 160 --pixbufGetFromDrawable darea (Rectangle 0 0 120 160)
 ------------------------------------------------------------------------
 -- REGISTER EVENTS
 
     onClicked train_button (trainButtonClicked netIO tdataIO cyclesIO)
     onClicked work_button (workButtonClicked netIO patternIO tdataPathIO resultListIO result_label)
-    onClicked clear_button (clearButtonClicked darea)
+    --onClicked clear_button (clearButtonClicked darea)
+    onClicked clear_button (pixelTest darea)
+    
          
     onValueSpinned momentum_spin (valueSpinned1 momentum_spin)
     onValueSpinned learningRate_spin (valueSpinned2 learningRate_spin)
@@ -132,13 +135,15 @@ main = do
     --onValueSpinned outputNeurons_spin (valueSpinned5 outputNeurons_spin)
     onValueSpinned cycles_spin (valueSpinned6 cycles_spin cyclesIO)
     
+    -- SELECT PATTERN FILE
     afterActivateLeaf menuitem1 $do
 		openFileDialog window "Please choose the pattern file" patternPathIO
 		path <- readIORef patternPathIO
 		pattern <- readPPMFile path
 		modifyIORef patternIO (\_ -> pattern)
 		putStrLn ("pattern file path: " ++ path)
-		
+	
+	-- SELECT TDATA PATH	
     afterActivateLeaf menuitem2 $do
 		openFolderDialog window "Please choose the tdata path" tdataPathIO
 		path <- readIORef tdataPathIO
@@ -165,9 +170,28 @@ main = do
     
     onToggled biasInput_check (onToggledInputBias biasInput_check biasInputIO)
     onToggled biasHidden_check (onToggledHiddenBias biasHidden_check biasHiddenIO)
-    
+
     darea `on` sizeRequest $ return (Requisition 120 160)
     darea `on` exposeEvent $ update
+    
+    --drw <- widgetGetDrawWindow darea
+    --drwIO <- newIORef drw
+    
+    {--
+    onRealize darea $do
+		--(t1 darea drwIO)
+		drw <- widgetGetDrawWindow darea
+		pixbuf <- pixbufGetFromDrawable drw (Rectangle 0 0 120 160)
+		--px <- pixbufGetPixels (fromJust pixbuf)
+		ww <- pixbufGetHasAlpha (fromJust pixbuf)
+		putStrLn (show ww)
+		--fu <- p1 px
+		--setLabel result_label fu -- $do
+			--ww <- pixbufGetWidth (fromJust pixbuf)
+			--putStrLn (ww)
+			--return "asdf"
+		return ()
+    --}
     
     -- Add mouse listener. 
     --
@@ -192,6 +216,30 @@ main = do
 ------------------------------------------------------------------------
 -- EVENTS
 ------------------------------------------------------------------------
+pixelTest darea = do
+	drw <- widgetGetDrawWindow darea
+	pixbuf <- pixbufGetFromDrawable drw (Rectangle 0 0 120 160)
+
+	pixels <- p1 (fromJust pixbuf)
+	pp1 <- mapM (\x -> readArray pixels x) [1..(120*160)]	-- 120x160 = 19200 pixels
+	
+	bytes <- pixbufGetRowstride (fromJust pixbuf)
+	sp <- pixbufGetBitsPerSample (fromJust pixbuf)
+	pixbufSave (fromJust pixbuf) "drawingarea.png" "png" [("","")]
+	
+	-- create a simple pgm file
+	let str = ("P2\n" ++ "#Created with GIMP\n" ++ "120 160\n" ++ "255\n")
+	let list = zipWith (\p i -> if i `mod` 20 == 0 then (show p ++"\n") else (show p ++ " ")) pp1 [1..]
+	writeFile "drawingarea.pgm" (str ++ (concat list))
+	
+	putStrLn (show pp1)
+	putStrLn ("pixel row stride: " ++ show bytes)
+	putStrLn ("bits per sample: " ++ show sp)
+	
+p1 pb = do
+	px <- (pixbufGetPixels pb :: IO (PixbufData Int Word8))
+	return px
+
 trainButtonClicked netIO tdataIO cyclesIO = do
 	nn <- readIORef netIO
 	td <- readIORef tdataIO
@@ -210,6 +258,7 @@ workButtonClicked netIO patternIO tdataPathIO resultListIO result_label = do --p
 	let bestVal = maximum resultList
 	let bestIdx = bestVal `elemIndex` resultList
 	
+	-- TODO: move this list in SELECT TDATA PATH area as ioref, it is unchanged until the next tdata
 	pgmList <- getPgmList path
 	let list = map (\x -> fst (break (=='.') x)) pgmList	-- get filenames before dot: 0.ppm => 0
 	
