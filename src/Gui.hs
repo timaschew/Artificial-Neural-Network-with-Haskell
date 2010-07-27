@@ -11,10 +11,10 @@ import TraindataParser
 import GraphicInterface
 
 import Data.IORef
-import Control.Concurrent
 import Data.List
 import Data.Word
 import Data.Array.Storable
+import Control.Concurrent
 import Maybe
 
 -- Gui
@@ -28,7 +28,7 @@ import Control.Monad
 -- TODO:
 	-- set momentun + lernrate with values set by gui (pass values to backpropagation algo???)
 	-- button to reset the trained net
-	-- test if pixelbuf array is correct
+	-- scale pixelbuf array to traindata size
 	-- print result / log
 	-- forkIO on work
 
@@ -83,6 +83,9 @@ main = do
         
     tdataPathIO <- newIORef (dataPath ++ "traindata/img/10_12_arial/")
     patternPathIO <- newIORef ""
+    -- TODO: 1) upscale pattern from file and insert it into drawingarea => get pattern only from drawingarea
+    --       2) OR use a flag für DAREA / FILE ....
+    --patternModeIO <- newIORef "DAREA"	-- (DAREA|FILE)
                 
     --tdata <- initTraindata (dataPath ++ "traindata/xor/trainingdata")
     tdataPath <- readIORef tdataPathIO
@@ -116,18 +119,42 @@ main = do
     cycles <- spinButtonGetValueAsInt cycles_spin
     cyclesIO <- newIORef cycles
     
-    --textViewSetBuffer textview appendText
     resultListIO <- newIORef [0.0]
+    
+    pgmNamesIO <- newIORef [""]
+    updatePgmNames tdataPathIO pgmNamesIO
+
+    --textViewSetBuffer textview appendText
     
 ------------------------------------------------------------------------
 -- REGISTER EVENTS
 
+	-- BUTTONS
+    onClicked clear_button (clearButtonClicked darea)
+    --onClicked clear_button (pixelTest darea)
     onClicked train_button (trainButtonClicked netIO tdataIO cyclesIO)
-    onClicked work_button (workButtonClicked netIO patternIO tdataPathIO resultListIO result_label)
-    --onClicked clear_button (clearButtonClicked darea)
-    onClicked clear_button (pixelTest darea)
+    onClicked work_button $do
+		pValues <- pixelTest darea
+		--putStrLn (show pValues)
+		
+		let inputLen = fromIntegral $ length $ head (inputs tdata)	-- get size of one input
+		let scaleDiv = floor (120*160 / inputLen)	-- has to match the input layer length!
+		putStrLn ("scaleDiv: " ++ show scaleDiv)
+		
+		let pattern = map (\x ->  realToFrac (pValues !! x) / 255) [x | x <- [0 .. (length pValues)-1], x `mod` scaleDiv == 0]
+		modifyIORef patternIO (\_ -> pattern)
+		putStrLn (show $ length pattern)
     
-         
+		pgmNames <- readIORef pgmNamesIO
+		(bestIdx, bestVal) <- findBestFit netIO patternIO resultListIO
+		-- update label
+		setLabel result_label (pgmNames !! bestIdx)
+		putStrLn ("index: " ++ show bestIdx ++ " bestVal: " ++ show bestVal) -- ++ show resultList)
+		-- print resultList
+		resultList <- readIORef resultListIO
+		putStrLn $ show resultList
+	
+	-- SPINBUTTONS
     onValueSpinned momentum_spin (valueSpinned1 momentum_spin)
     onValueSpinned learningRate_spin (valueSpinned2 learningRate_spin)
     --onValueSpinned inputNeurons_spin (valueSpinned3 inputNeurons_spin)
@@ -160,6 +187,8 @@ main = do
 		updateNetworkSize tdata inputNeurons_spin outputNeurons_spin
 		-- update result label
 		setLabel result_label "--"
+		-- update pgmNames
+		updatePgmNames tdataPathIO pgmNamesIO
 		
 		putStrLn ("network: " ++ genTopologyStr tdata b1 b2 hiddenLen)
 		putStrLn ("tdata path: " ++ path)
@@ -173,25 +202,6 @@ main = do
 
     darea `on` sizeRequest $ return (Requisition 120 160)
     darea `on` exposeEvent $ update
-    
-    --drw <- widgetGetDrawWindow darea
-    --drwIO <- newIORef drw
-    
-    {--
-    onRealize darea $do
-		--(t1 darea drwIO)
-		drw <- widgetGetDrawWindow darea
-		pixbuf <- pixbufGetFromDrawable drw (Rectangle 0 0 120 160)
-		--px <- pixbufGetPixels (fromJust pixbuf)
-		ww <- pixbufGetHasAlpha (fromJust pixbuf)
-		putStrLn (show ww)
-		--fu <- p1 px
-		--setLabel result_label fu -- $do
-			--ww <- pixbufGetWidth (fromJust pixbuf)
-			--putStrLn (ww)
-			--return "asdf"
-		return ()
-    --}
     
     -- Add mouse listener. 
     --
@@ -216,29 +226,43 @@ main = do
 ------------------------------------------------------------------------
 -- EVENTS
 ------------------------------------------------------------------------
+updatePgmNames tdataPathIO pgmNamesIO = do
+	path <- readIORef tdataPathIO
+	pgmList <- getPgmList path
+	-- get filenames before dot: 0.ppm => 0
+	let pgmNames = map (\x -> fst (break (=='.') x)) pgmList	
+	modifyIORef pgmNamesIO (\_ -> pgmNames)
+
 pixelTest darea = do
 	drw <- widgetGetDrawWindow darea
-	pixbuf <- pixbufGetFromDrawable drw (Rectangle 0 0 120 160)
-
-	pixels <- p1 (fromJust pixbuf)
-	pp1 <- mapM (\x -> readArray pixels x) [1..(120*160)]	-- 120x160 = 19200 pixels
+	--(width, height) <- drawableGetSize drw
+	--(w,h) <- drawableGetSize drw
 	
-	bytes <- pixbufGetRowstride (fromJust pixbuf)
-	sp <- pixbufGetBitsPerSample (fromJust pixbuf)
+	-- !!! width was 128 instead 120...
+	let width = 120 --realToFrac w	
+	let height = 160 --realToFrac h
+	
+	pixbuf <- pixbufGetFromDrawable drw (Rectangle 0 0 width height)
+	pixels <- (pixbufGetPixels (fromJust pixbuf) :: IO (PixbufData Int Word8)) 
+
+	-- pixels is a flat array. 
+	-- formula: p = y * rowstride + x * nChannels
+	-- pixel Words: w * h * 3 channels
+	-- => every third value is a pixel value
+	pValues <- mapM (\x -> readArray pixels x) [x | x <- [0..(width * height * 3 - 1)], x `mod` 3 == 0]	
+	
+	-- save drawing area as png file
 	pixbufSave (fromJust pixbuf) "drawingarea.png" "png" [("","")]
 	
 	-- create a simple pgm file
-	let str = ("P2\n" ++ "#Created with GIMP\n" ++ "120 160\n" ++ "255\n")
-	let list = zipWith (\p i -> if i `mod` 20 == 0 then (show p ++"\n") else (show p ++ " ")) pp1 [1..]
-	writeFile "drawingarea.pgm" (str ++ (concat list))
+	let pgmHeader = ("P2\n" ++ "#Created with ANN\n" ++ "120 160\n" ++ "255\n")
+	let pgmData = zipWith (\p i -> if i `mod` 20 == 0 then (show p ++"\n") else (show p ++ " ")) pValues [1..]
+	writeFile "drawingarea.pgm" (pgmHeader ++ (concat pgmData))
 	
-	putStrLn (show pp1)
-	putStrLn ("pixel row stride: " ++ show bytes)
-	putStrLn ("bits per sample: " ++ show sp)
-	
-p1 pb = do
-	px <- (pixbufGetPixels pb :: IO (PixbufData Int Word8))
-	return px
+	--putStrLn (show pValues)
+	putStrLn ("w: " ++ show width)
+	putStrLn ("h: " ++ show height)
+	return pValues
 
 trainButtonClicked netIO tdataIO cyclesIO = do
 	nn <- readIORef netIO
@@ -249,24 +273,16 @@ trainButtonClicked netIO tdataIO cyclesIO = do
 	modifyIORef netIO (\_ -> trainedNet)
 	putStrLn ("network trained!")
 	
-workButtonClicked netIO patternIO tdataPathIO resultListIO result_label = do --putStrLn "work button clicked"
+findBestFit netIO patternIO resultListIO = do
 	trainedNet <- readIORef netIO
 	pattern <- readIORef patternIO
-	path <- readIORef tdataPathIO
 	
 	let resultList = work trainedNet pattern
 	let bestVal = maximum resultList
 	let bestIdx = bestVal `elemIndex` resultList
 	
-	-- TODO: move this list in SELECT TDATA PATH area as ioref, it is unchanged until the next tdata
-	pgmList <- getPgmList path
-	let list = map (\x -> fst (break (=='.') x)) pgmList	-- get filenames before dot: 0.ppm => 0
-	
 	modifyIORef resultListIO (\_ -> resultList)
-	--putStrLn ("its a: " ++ list !! (fromJust bestIdx))
-	setLabel result_label (list !! (fromJust bestIdx))
-	putStrLn ("index: " ++ show (fromJust bestIdx) ++ " bestVal: " ++ show bestVal) -- ++ show resultList)
-	putStrLn $ show resultList
+	return ((fromJust bestIdx), bestVal)
 
 setLabel label text = do
     set label [ labelText := text ] --putStrLn "clear button clicked"
@@ -404,16 +420,7 @@ openFolderDialog parentWindow title filePathIO = do
         _                   -> return ()
     widgetHide dialog
     
-genTopologyStr :: Trainingdata -> Bool -> Bool -> Int -> String
-genTopologyStr tdata iBias hBias hiddenLen = do
-	let inputLen = length $ head (inputs tdata)		-- get size of one input
-	let outputLen = length $ head (outputs tdata)	-- get size of one output
-	let b1  | iBias == True = "b"
-			| otherwise = ""
-	let b2  | hBias == True = "b"
-			| otherwise = ""
 
-	(show inputLen ++ b1 ++ "\n" ++ show hiddenLen ++ b2 ++ "\n" ++ show outputLen ++ "\n")
 
 updateNetworkSize tdata inputNeurons_spin outputNeurons_spin = do
 	let inputLen = length $ head (inputs tdata)		-- get size of one input

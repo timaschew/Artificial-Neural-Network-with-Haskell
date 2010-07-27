@@ -214,6 +214,15 @@ initNetwork input = do
 	let net = getTopology input randNums
 	; return net
 
+genTopologyStr :: Trainingdata -> Bool -> Bool -> Int -> String
+genTopologyStr tdata iBias hBias hiddenLen = do
+	let inputLen = length $ head (inputs tdata)		-- get size of one input
+	let outputLen = length $ head (outputs tdata)	-- get size of one output
+	let b1  | iBias == True = "b"
+			| otherwise = ""
+	let b2  | hBias == True = "b"
+			| otherwise = ""
+	(show inputLen ++ b1 ++ "\n" ++ show hiddenLen ++ b2 ++ "\n" ++ show outputLen ++ "\n")
 	
 initTraindata :: String -> IO Trainingdata
 initTraindata filename = do
