@@ -81,7 +81,7 @@ main = do
     flip widgetSetSensitivity False inputNeurons_spin    
     flip widgetSetSensitivity False outputNeurons_spin
         
-    tdataPathIO <- newIORef (dataPath ++ "traindata/img/10_12_arial/")
+    tdataPathIO <- newIORef (dataPath ++ "traindata/img/10_12_lithos/")
     patternPathIO <- newIORef ""
     -- TODO: 1) upscale pattern from file and insert it into drawingarea => get pattern only from drawingarea
     --       2) OR use a flag für DAREA / FILE ....
@@ -138,13 +138,19 @@ main = do
 		--putStrLn (show pValues)
 		
 		let inputLen = fromIntegral $ length $ head (inputs tdata)	-- get size of one input
-		let scaleDiv = floor (120*160 / inputLen)	-- has to match the input layer length!
-		putStrLn ("scaleDiv: " ++ show scaleDiv)
-		
-		let pattern = map (\x ->  realToFrac (pValues !! x) / 255) [x | x <- [0 .. (length pValues)-1], x `mod` scaleDiv == 0]
+		let scale = 12 -- 120x144 / 12 => 10x12 - has to match the input layer length!
+		putStrLn ("scaleDiv: " ++ show scale)
+		let width = 120
+		--let pattern = map (\x -> realToFrac (pValues !! x)) [x | x <- [0 .. (length pValues)-1], x `mod` scale == 0]
+		let pattern = map (\x -> realToFrac (pValues !! x)) [x | x <- [0 .. (length pValues)-1], x `mod` scale == 0 && (x `mod` (width*scale)) < width]
+		--let pattern = scaleDown pValues 120 144 scale
 		modifyIORef patternIO (\_ -> pattern)
 		putStrLn (show $ length pattern)
     
+		let pgmHeader = ("P2\n" ++ "#Created with ANN\n" ++ "10 12\n" ++ "255\n")
+		let pgmData = zipWith (\p i -> if i `mod` 20 == 0 then (show (truncate p) ++"\n") else (show (truncate p) ++ " ")) pattern [1..]
+		writeFile "drawingarea_sclaed.pgm" (pgmHeader ++ (concat pgmData))
+
 		pgmNames <- readIORef pgmNamesIO
 		(bestIdx, bestVal) <- findBestFit netIO patternIO resultListIO
 		-- update label
@@ -200,7 +206,7 @@ main = do
     onToggled biasInput_check (onToggledInputBias biasInput_check biasInputIO)
     onToggled biasHidden_check (onToggledHiddenBias biasHidden_check biasHiddenIO)
 
-    darea `on` sizeRequest $ return (Requisition 120 160)
+    darea `on` sizeRequest $ return (Requisition 120 144)
     darea `on` exposeEvent $ update
     
     -- Add mouse listener. 
@@ -223,6 +229,8 @@ main = do
     widgetShowAll window
     mainGUI
 
+
+
 ------------------------------------------------------------------------
 -- EVENTS
 ------------------------------------------------------------------------
@@ -240,7 +248,7 @@ pixelTest darea = do
 	
 	-- !!! width was 128 instead 120...
 	let width = 120 --realToFrac w	
-	let height = 160 --realToFrac h
+	let height = 144 --realToFrac h
 	
 	pixbuf <- pixbufGetFromDrawable drw (Rectangle 0 0 width height)
 	pixels <- (pixbufGetPixels (fromJust pixbuf) :: IO (PixbufData Int Word8)) 
@@ -255,7 +263,7 @@ pixelTest darea = do
 	pixbufSave (fromJust pixbuf) "drawingarea.png" "png" [("","")]
 	
 	-- create a simple pgm file
-	let pgmHeader = ("P2\n" ++ "#Created with ANN\n" ++ "120 160\n" ++ "255\n")
+	let pgmHeader = ("P2\n" ++ "#Created with ANN\n" ++ "120 144\n" ++ "255\n")
 	let pgmData = zipWith (\p i -> if i `mod` 20 == 0 then (show p ++"\n") else (show p ++ " ")) pValues [1..]
 	writeFile "drawingarea.pgm" (pgmHeader ++ (concat pgmData))
 	
@@ -350,7 +358,7 @@ button draw = do
         w     <- eventWindow
         (x,y) <- eventCoordinates
         liftIO $ renderWithDrawable w $ do
-            arc x y 3.0 0 (2*pi)
+            arc x y 10.0 0 (2*pi)
             fill
     return True
 
