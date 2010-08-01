@@ -255,7 +255,7 @@ updateNeuronWeightsHelper w deltaW = let k = zipWith (+) w deltaW
 -- sum up the delta * weight_i of a neuron
 getDeltaStateSumForWeight :: Int -> [Neuron] -> Double
 getDeltaStateSumForWeight i rl = result where
-	deltaStateList = foldl' (\list n -> ((delta n) * ((weights n) !! i)) : list) [] rl -- NOTE: no reverse  needed here
+	deltaStateList = foldl (\list n -> ((delta n) * ((weights n) !! i)) : list) [] rl -- NOTE: no reverse  needed here
 	result = sum deltaStateList
 
 -- calculate the delta for a layer (not for output layer)
@@ -272,3 +272,21 @@ calcNeuronDelta ln rl i = updatedNeuron where
 	deltaStateSumOfNextLayer = getDeltaStateSumForWeight i rl
 	formula = (state ln) * (1 - (state ln)) * deltaStateSumOfNextLayer
 	updatedNeuron = setDelta ln formula
+	
+	
+	
+-- ALTERNATIVE WAY
+
+calcLayerDelta2 :: [Neuron] -> [Neuron] -> [Neuron]
+calcLayerDelta2 ll rl = zipWith (\n i -> calcNeuronDelta2 n rl i) ll [0..(length ll)]
+	
+calcNeuronDelta2 :: Neuron -> [Neuron] -> Int -> Neuron
+calcNeuronDelta2 n rl i = updatedNeuron where
+	deltaList = foldl (\dList n -> (delta n) : dList) [] rl
+	weightList = foldl (\wwList rn -> (weights rn) : wwList) [] rl
+	weightsForNeuron = foldl (\wList weights -> (weights !! i) : wList) [] weightList
+	deltaMulWeights = zipWith (*) deltaList weightsForNeuron
+	summedStateOfNextLayer = sum deltaMulWeights
+	formula = (state n) * (1 - (state n)) * summedStateOfNextLayer
+	updatedNeuron = setDelta n formula
+	
