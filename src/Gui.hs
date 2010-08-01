@@ -16,6 +16,7 @@ import Data.Word
 import Data.Array.Storable
 import Control.Concurrent
 import Maybe
+import Text.Printf
 
 -- Gui
 import Graphics.Rendering.Cairo
@@ -61,6 +62,7 @@ main = do
 	
     -- info, labels
     textview <- xmlGetWidget xml castToTextView "textview1"
+    scrolledWindow <- xmlGetWidget xml castToScrolledWindow "scrolledwindow1"
     statusbar <- xmlGetWidget xml castToStatusbar "statusbar1"
     result_label <- xmlGetWidget xml castToLabel "label10"
      
@@ -77,12 +79,12 @@ main = do
      
 ------------------------------------------------------------------------
 -- ANN, SETTINGS
-        
+             
     flip widgetSetSensitivity False inputNeurons_spin    
     flip widgetSetSensitivity False outputNeurons_spin
         
     tdataPathIO <- newIORef (dataPath ++ "traindata/img/10_12_lithos/")
-    patternPathIO <- newIORef ""
+    patternPathIO <- newIORef (dataPath ++ "traindata/img/10_12_great_times/" ++ "1.pgm")
     -- TODO: 1) upscale pattern from file and insert it into drawingarea => get pattern only from drawingarea
     --       2) OR use a flag für DAREA / FILE ....
     --patternModeIO <- newIORef "DAREA"	-- (DAREA|FILE)
@@ -107,7 +109,8 @@ main = do
     updateNetworkSize tdata inputNeurons_spin outputNeurons_spin
     
     --let pattern = [1.0, 0.0]
-    pattern <- readPPMFile (dataPath ++ "traindata/img/10_12_great_times/" ++ "1.pgm")
+    patternPath <- readIORef patternPathIO
+    pattern <- readPPMFile patternPath
     patternIO <- newIORef pattern
 
     momentum <- spinButtonGetValueAsInt momentum_spin
@@ -119,26 +122,29 @@ main = do
     cycles <- spinButtonGetValueAsInt cycles_spin
     cyclesIO <- newIORef cycles
     
+    trainedCountIO <- newIORef 0
+    
     resultListIO <- newIORef [0.0]
     
     pgmNamesIO <- newIORef [""]
     updatePgmNames tdataPathIO pgmNamesIO
 
-    --textViewSetBuffer textview appendText
-    
+    updateStatusBar statusbar trainedCountIO
+
 ------------------------------------------------------------------------
 -- REGISTER EVENTS
 
 	-- BUTTONS
     onClicked clear_button (clearButtonClicked darea)
     --onClicked clear_button (pixelTest darea)
-    onClicked train_button (trainButtonClicked netIO tdataIO cyclesIO)
+    onClicked train_button (trainButtonClicked netIO tdataIO cyclesIO trainedCountIO textview statusbar)
     onClicked work_button $do
-		pValues <- pixelTest darea
+		pValues <- pixelTest darea textview
 		--putStrLn (show pValues)
 		
 		let inputLen = fromIntegral $ length $ head (inputs tdata)	-- get size of one input
 		let scale = 12 -- 120x144 / 12 => 10x12 - has to match the input layer length!
+		appendLog textview ("scaleDiv: " ++ show scale)
 		putStrLn ("scaleDiv: " ++ show scale)
 		let width = 120
 		--let pattern = map (\x -> realToFrac (pValues !! x)) [x | x <- [0 .. (length pValues)-1], x `mod` scale == 0]
@@ -156,8 +162,16 @@ main = do
 		-- update label
 		setLabel result_label (pgmNames !! bestIdx)
 		putStrLn ("index: " ++ show bestIdx ++ " bestVal: " ++ show bestVal) -- ++ show resultList)
-		-- print resultList
+		appendLog textview ("index: " ++ show bestIdx ++ " bestVal: " ++ show bestVal ++ "\n") -- ++ show resultList)
+		
 		resultList <- readIORef resultListIO
+		net <- readIORef netIO
+		let outputLayer = last net
+		let errorList = map delta outputLayer
+		
+		appendLog textview $ concat $ zipWith3 (\r n e -> (n ++ ": " ++ (printf "%.3f  E: %+.3f" r e) ++ "\n")) resultList pgmNames errorList
+
+		--appendLog textview $ showError net
 		putStrLn $ show resultList
 	
 	-- SPINBUTTONS
@@ -174,6 +188,7 @@ main = do
 		path <- readIORef patternPathIO
 		pattern <- readPPMFile path
 		modifyIORef patternIO (\_ -> pattern)
+		appendLog textview ("pattern file path: " ++ path ++ "\n")
 		putStrLn ("pattern file path: " ++ path)
 	
 	-- SELECT TDATA PATH	
@@ -196,8 +211,11 @@ main = do
 		-- update pgmNames
 		updatePgmNames tdataPathIO pgmNamesIO
 		
+		appendLog textview ("network: " ++ genTopologyStr tdata b1 b2 hiddenLen)
+		appendLog textview ("tdata path: " ++ path ++ "\n")
 		putStrLn ("network: " ++ genTopologyStr tdata b1 b2 hiddenLen)
 		putStrLn ("tdata path: " ++ path)
+
     
     --afterActivateLeaf menuitem3 (menuItem3Select window "Please choose..." tdataPathIO)--menuItem3Select
     --afterActivateLeaf menuitem4 (menuItem4Select window "Please choose..." tdataPathIO)--menuItem4Select
@@ -241,7 +259,7 @@ updatePgmNames tdataPathIO pgmNamesIO = do
 	let pgmNames = map (\x -> fst (break (=='.') x)) pgmList	
 	modifyIORef pgmNamesIO (\_ -> pgmNames)
 
-pixelTest darea = do
+pixelTest darea textview = do
 	drw <- widgetGetDrawWindow darea
 	--(width, height) <- drawableGetSize drw
 	--(w,h) <- drawableGetSize drw
@@ -268,18 +286,26 @@ pixelTest darea = do
 	writeFile "drawingarea.pgm" (pgmHeader ++ (concat pgmData))
 	
 	--putStrLn (show pValues)
+	appendLog textview ("w: " ++ show width)
+	appendLog textview ("h: " ++ show height ++ "\n")
 	putStrLn ("w: " ++ show width)
 	putStrLn ("h: " ++ show height)
 	return pValues
 
-trainButtonClicked netIO tdataIO cyclesIO = do
+trainButtonClicked netIO tdataIO cyclesIO trainedCountIO textview statusbar = do
 	nn <- readIORef netIO
 	td <- readIORef tdataIO
 	cycles <- readIORef cyclesIO
+	trainedCount <- readIORef trainedCountIO
 	
 	let trainedNet = trainNet nn td cycles
 	modifyIORef netIO (\_ -> trainedNet)
-	putStrLn ("network trained!")
+	modifyIORef trainedCountIO (\_ -> trainedCount + cycles)
+	updateStatusBar statusbar trainedCountIO
+	--appendLog textview ("network trained!" ++ "\n")
+	--appendLog textview ("trainedCount: " ++ show (trainedCount + cycles) ++ "\n")
+	--putStrLn ("network trained!")
+	return ()
 	
 findBestFit netIO patternIO resultListIO = do
 	trainedNet <- readIORef netIO
@@ -293,7 +319,7 @@ findBestFit netIO patternIO resultListIO = do
 	return ((fromJust bestIdx), bestVal)
 
 setLabel label text = do
-    set label [ labelText := text ] --putStrLn "clear button clicked"
+    set label [ labelText := text ]
 
 valueSpinned1 widget = do
 	value <- spinButtonGetValue widget
@@ -436,12 +462,22 @@ updateNetworkSize tdata inputNeurons_spin outputNeurons_spin = do
 	spinButtonSetValue inputNeurons_spin (fromIntegral inputLen)
 	spinButtonSetValue outputNeurons_spin (fromIntegral outputLen)
 		
-{--		
-appendText = do
-	table <- textTagTableNew
-    buff <- textBufferNew (Just table)
-    --table <- textTagTableNew
+appendLog textview newtext = do
+    textBuffer <- textViewGetBuffer textview
+    charCount <- textBufferGetCharCount textBuffer
+    let delimiter | charCount > 0 = "\n" 
+				  | otherwise = ""
+    --textBufferInsertAtCursor textBuffer (delimiter ++ newtext)
+    endIter <- textBufferGetEndIter textBuffer
+    textBufferInsert textBuffer endIter (delimiter ++ newtext)
     
-    --textBufferSetText "hallo"
-    return buff
---}
+    -- scrolls textview to bottom
+    onBufferChanged textBuffer $do
+		endIter <- textBufferGetEndIter textBuffer
+		mark <- textBufferCreateMark textBuffer Nothing endIter False
+		textViewScrollMarkOnscreen textview mark
+
+updateStatusBar statusbar trainedCountIO = do
+	trainedCount <- readIORef trainedCountIO
+	contextId <- statusbarGetContextId statusbar "status"
+	statusbarPush statusbar contextId ("training steps absolved: " ++ show trainedCount)
