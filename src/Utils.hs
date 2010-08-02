@@ -338,7 +338,9 @@ readI x = read x :: Int
 dirToTrainData :: String -> IO Trainingdata
 dirToTrainData path = do
 	inputValues <- getPPMInput path
-	let outputValues = getOutputMatrix (length inputValues)
+
+	let outputValues = getOuputMatrixForMultipleDataset (length inputValues) 10
+	
 	let tdata = Trainingdata (length inputValues) inputValues outputValues
 	return tdata
 
@@ -360,7 +362,14 @@ getPgmList path = do
 	dirContent <- getDirectoryContents path
 	let pgmList = filter (isSuffixOf ".pgm") dirContent
 	return $ sort pgmList
-	
+
 -- returns the output values list (n x n identity matrix)
 getOutputMatrix :: Int -> [[Double]]
 getOutputMatrix n = map (\x-> map (\y-> if y == x then 1.0 else 0.0) [1..n]) [1..n]
+
+getOuputMatrixForMultipleDataset :: Int -> Int -> [[Double]]
+getOuputMatrixForMultipleDataset size n = multiple where
+	output = getOutputMatrix n
+	m = (div size n) -- 6 datasets with each 10 fonts = 60, m = 60 / 10 = 6
+	nTimes = take m (repeat output)
+	multiple = concat nTimes

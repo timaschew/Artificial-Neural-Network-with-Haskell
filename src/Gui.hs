@@ -83,7 +83,7 @@ main = do
     flip widgetSetSensitivity False inputNeurons_spin    
     flip widgetSetSensitivity False outputNeurons_spin
         
-    tdataPathIO <- newIORef (dataPath ++ "traindata/img/10_12_lithos/")
+    tdataPathIO <- newIORef (dataPath ++ "traindata/img/10_12_anton/versions/all/")
     patternPathIO <- newIORef (dataPath ++ "traindata/img/10_12_great_times/" ++ "1.pgm")
     -- TODO: 1) upscale pattern from file and insert it into drawingarea => get pattern only from drawingarea
     --       2) OR use a flag für DAREA / FILE ....
