@@ -29,9 +29,6 @@ import Control.Monad
 
 -- TODO:
 	-- set momentun + lernrate with values set by gui (pass values to backpropagation algo???)
-	-- button to reset the trained net
-	-- scale pixelbuf array to traindata size
-	-- print result / log
 	-- forkIO on work
 
 
@@ -145,7 +142,6 @@ main = do
 		
 		let inputLen = fromIntegral $ length $ head (inputs tdata)	-- get size of one input
 		let scale = 12 -- 120x144 / 12 => 10x12 - has to match the input layer length!
-		appendLog textview ("scaleDiv: " ++ show scale)
 		putStrLn ("scaleDiv: " ++ show scale)
 		let width = 120
 		--let pattern = map (\x -> realToFrac (pValues !! x)) [x | x <- [0 .. (length pValues)-1], x `mod` scale == 0]
@@ -163,16 +159,9 @@ main = do
 		-- update label
 		setLabel result_label (pgmNames !! bestIdx)
 		putStrLn ("index: " ++ show bestIdx ++ " bestVal: " ++ show bestVal) -- ++ show resultList)
-		appendLog textview ("index: " ++ show bestIdx ++ " bestVal: " ++ show bestVal ++ "\n") -- ++ show resultList)
 		
 		resultList <- readIORef resultListIO
-		net <- readIORef netIO
-		let outputLayer = last net
-		let errorList = map delta outputLayer
-		
-		appendLog textview $ concat $ zipWith3 (\r n e -> (n ++ ": " ++ (printf "%.3f  E: %+.3f" r e) ++ "\n")) resultList pgmNames errorList
-
-		--appendLog textview $ showError net
+		appendLog textview $ concat $ zipWith (\r n -> ("[" ++ n ++ "" ++ ": " ++ (printf "%.3f" r) ++ "]  ")) resultList pgmNames    
 		putStrLn $ show resultList
 	
 	-- SPINBUTTONS
@@ -287,8 +276,6 @@ pixelTest darea textview = do
 	writeFile "drawingarea.pgm" (pgmHeader ++ (concat pgmData))
 	
 	--putStrLn (show pValues)
-	appendLog textview ("w: " ++ show width)
-	appendLog textview ("h: " ++ show height ++ "\n")
 	putStrLn ("w: " ++ show width)
 	putStrLn ("h: " ++ show height)
 	return pValues
