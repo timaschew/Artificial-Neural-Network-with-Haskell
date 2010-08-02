@@ -10,6 +10,7 @@ import TopologyParser
 import TraindataParser
 import GraphicInterface
 
+import Control.Parallel.Strategies
 import Data.IORef
 import Data.List
 import Data.Word
@@ -298,7 +299,14 @@ trainButtonClicked netIO tdataIO cyclesIO trainedCountIO textview statusbar = do
 	cycles <- readIORef cyclesIO
 	trainedCount <- readIORef trainedCountIO
 	
-	let trainedNet = trainNet nn td cycles
+	mvar <- newEmptyMVar
+	
+	--let trainedNet = trainNet nn td cycles
+	forkIO (forkTraining mvar nn td cycles)
+	--putStrLn $ (show trainedNet)
+
+	trainedNet <- takeMVar mvar
+	
 	modifyIORef netIO (\_ -> trainedNet)
 	modifyIORef trainedCountIO (\_ -> trainedCount + cycles)
 	updateStatusBar statusbar trainedCountIO
@@ -306,7 +314,13 @@ trainButtonClicked netIO tdataIO cyclesIO trainedCountIO textview statusbar = do
 	--appendLog textview ("trainedCount: " ++ show (trainedCount + cycles) ++ "\n")
 	--putStrLn ("network trained!")
 	return ()
-	
+
+forkTraining mvar net train cycles = do
+    let trainedNet = trainNet net train cycles
+    putMVar mvar trainedNet
+    putStrLn $ (show trainedNet)
+
+
 findBestFit netIO patternIO resultListIO = do
 	trainedNet <- readIORef netIO
 	pattern <- readIORef patternIO
