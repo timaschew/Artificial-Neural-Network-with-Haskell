@@ -1,8 +1,8 @@
 # configuration
 COMP		= ghc
-COMP_OPT	= -O2 -auto-all -prof	# --fforce-recomp -Wall
+COMP_OPT	= -O2 -auto-all -prof -threaded	# --fforce-recomp -Wall
 RUN		= ./Main
-RUN_OPT		= +RTS -H1024M -prof -sstderr
+RUN_OPT		= +RTS -N2 -H1024M -prof -sstderr
 BIN		= Main Gui
 
 
@@ -11,7 +11,6 @@ run1:
 	$(RUN) demo2 500 $(RUN_OPT)
 	
 run2:
-#	./Main demo2 1000 +RTS -H256M -prof -sstderr
 	$(RUN) demo2 1000 $(RUN_OPT)
 
 run3:
@@ -21,18 +20,15 @@ ref:
 	$(RUN) ref 100
 
 gui:	Gui.hs
-	$(RUN) gui 0 $(RUN_OPT)
-
-gui2:	Gui.hs
 	$(COMP) --make $+ && ./Gui
 
 # run default action
 run:
-	make clean && make compile && make run2
+	make clean && make gui
+#	make clean && make compile && make run2
 
 compile: Main.hs
 	$(COMP) $(COMP_OPT) --make Main.hs 
-#	ghc -O2 --make Main.hs -prof -auto-all
 
 clean:
-	touch $(BIN) && rm *.o *.hi $(BIN)
+	touch $(BIN) temp.o temp.hi && rm *.o *.hi $(BIN)

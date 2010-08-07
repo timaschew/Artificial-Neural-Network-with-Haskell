@@ -77,8 +77,7 @@ universalUseCase net action = do
 	putStrLn (show pureNet)
 	showError pureNet
 
--- 100 steps: [-0.024 -0.009 -0.012 -0.001 -0.000 -0.002 -0.001 -0.006 -0.000 0.071 ]
--- 200 steps: [-0.005 -0.004 -0.003 -0.001 -0.000 -0.002 -0.000 -0.002 -0.000 0.018 ]
+-- 100 steps: [-0.082 -0.001 -0.004 -0.003 -0.000 -0.001 -0.004 -0.006 -0.004 0.147 ]
 refUseCase steps action = do
 	let path = dataPath ++ "traindata/img/10_12_arial/"
 	tdata <- dirToTrainData path

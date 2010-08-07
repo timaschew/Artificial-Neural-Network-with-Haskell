@@ -29,7 +29,12 @@ import Control.Monad
 
 -- TODO:
 	-- set momentun + lernrate with values set by gui (pass values to backpropagation algo???)
-	-- forkIO on work
+	-- some cleanup
+	-- load pattern from file is not activ now, because drawingarea is used as pattern. remove menu item?
+
+-- NOTE: you have to set the dataPath before running Gui.hs
+-- if you run Gui.hs from src folder inlude the following line:
+-- dataPath = "../data/"
 
 
 main :: IO()
@@ -67,9 +72,6 @@ main = do
     -- menuitems
     menuitem1 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem1"
     menuitem2 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem2"
-    --menuitem3 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem3"
-    --menuitem4 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem4"
-    --menuitem5 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem5"
 
 	-- checkbutton
     biasInput_check <- xmlGetWidget xml castToCheckButton "checkbutton1"
@@ -135,7 +137,26 @@ main = do
 	-- BUTTONS
     onClicked clear_button (clearButtonClicked darea)
     --onClicked clear_button (pixelTest darea)
-    onClicked train_button (trainButtonClicked netIO tdataIO cyclesIO trainedCountIO textview statusbar)
+    onClicked train_button $do
+		nn <- readIORef netIO
+		td <- readIORef tdataIO
+		cycles <- readIORef cyclesIO
+		trainedCount <- readIORef trainedCountIO
+		
+		mvar <- newEmptyMVar
+		
+		--let trainedNet = trainNet nn td cycles
+		forkIO (forkTraining mvar nn td cycles)
+		--putStrLn $ (show trainedNet)
+
+		trainedNet <- takeMVar mvar
+		
+		modifyIORef netIO (\_ -> trainedNet)
+		modifyIORef trainedCountIO (\_ -> trainedCount + cycles)
+		updateStatusBar statusbar trainedCountIO
+		putStrLn ("network trained!")
+		return ()	
+    
     onClicked work_button $do
 		pValues <- pixelTest darea textview
 		--putStrLn (show pValues)
@@ -206,11 +227,6 @@ main = do
 		putStrLn ("network: " ++ genTopologyStr tdata b1 b2 hiddenLen)
 		putStrLn ("tdata path: " ++ path)
 
-    
-    --afterActivateLeaf menuitem3 (menuItem3Select window "Please choose..." tdataPathIO)--menuItem3Select
-    --afterActivateLeaf menuitem4 (menuItem4Select window "Please choose..." tdataPathIO)--menuItem4Select
-    --afterActivateLeaf menuitem5 (menuItem5Select window "Please choose..." tdataPathIO)--menuItem5Select
-    
     onToggled biasInput_check (onToggledInputBias biasInput_check biasInputIO)
     onToggled biasHidden_check (onToggledHiddenBias biasHidden_check biasHiddenIO)
 
@@ -280,28 +296,6 @@ pixelTest darea textview = do
 	putStrLn ("h: " ++ show height)
 	return pValues
 
-trainButtonClicked netIO tdataIO cyclesIO trainedCountIO textview statusbar = do
-	nn <- readIORef netIO
-	td <- readIORef tdataIO
-	cycles <- readIORef cyclesIO
-	trainedCount <- readIORef trainedCountIO
-	
-	mvar <- newEmptyMVar
-	
-	--let trainedNet = trainNet nn td cycles
-	forkIO (forkTraining mvar nn td cycles)
-	--putStrLn $ (show trainedNet)
-
-	trainedNet <- takeMVar mvar
-	
-	modifyIORef netIO (\_ -> trainedNet)
-	modifyIORef trainedCountIO (\_ -> trainedCount + cycles)
-	updateStatusBar statusbar trainedCountIO
-	--appendLog textview ("network trained!" ++ "\n")
-	--appendLog textview ("trainedCount: " ++ show (trainedCount + cycles) ++ "\n")
-	--putStrLn ("network trained!")
-	return ()
-
 forkTraining mvar net train cycles = do
     let trainedNet = trainNet net train cycles
     putMVar mvar trainedNet
@@ -346,21 +340,6 @@ valueSpinned6 widget cyclesIO = do
 	value <- spinButtonGetValueAsInt widget
 	modifyIORef cyclesIO (\_ -> value)
 	putStrLn ("cycles spinned: " ++ show value)
-
-menuItem3Select window title pathIO = do
-	openFileDialog window "Please chose a tdata File or Path" pathIO
-	path <- readIORef pathIO
-	putStrLn ("MenuItem1 selected, path: " ++ path)
-	
-menuItem4Select window title pathIO = do
-	openFileDialog window "Please chose a tdata File or Path" pathIO
-	path <- readIORef pathIO
-	putStrLn ("MenuItem1 selected, path: " ++ path)
-	
-menuItem5Select window title pathIO = do
-	openFileDialog window "Please chose a tdata File or Path" pathIO
-	path <- readIORef pathIO
-	putStrLn ("MenuItem1 selected, path: " ++ path)
 
 onToggledInputBias cb biasInputIO = do
 	value <- toggleButtonGetActive cb
