@@ -8,19 +8,19 @@ BIN		= Main Gui
 
 # actions
 run1:
-	$(RUN) demo2 500 $(RUN_OPT)
+	$(RUN) demo 500
 	
 run2:
-	$(RUN) demo2 1000 $(RUN_OPT)
+	$(RUN) demo 1000
 
 run3:
-	$(RUN) pgm1 10 $(RUN_OPT)
+	$(RUN) pgm1 10
 
-ref:
-	$(RUN) ref 100
+xor:
+	$(RUN) demoXor 2000
 
 gui:	Gui.hs
-	$(COMP) --make $+ && ./Gui
+	$(COMP) --make $+ && ./Gui $(RUN_OPT)
 
 # run default action
 run:
