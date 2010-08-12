@@ -81,7 +81,7 @@
                         <child>
                           <widget class="GtkLabel" id="label11">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">&lt;b&gt;canvas&lt;/b&gt;</property>
+                            <property name="label" translatable="yes">&lt;b&gt;Pattern&lt;/b&gt;</property>
                             <property name="use_markup">True</property>
                           </widget>
                           <packing>

@@ -57,26 +57,22 @@ import Trainingdata
 import Data.List (foldl')
 import Control.Parallel.Strategies
 
--- Backpropagation Configuration
-learnRate = 0.350
-momentum = 0.15
-
 --
 -- GENERIC Algorithm,
 --
 -- do forwardPass with TrainData then backwardPass with TrainData
 -- call genericTraining network trainingdata 0
 -- important to use zero for last parameter
-genericTraining :: Network -> Trainingdata -> Int -> Network
-genericTraining net t (-1) = net -- stop here
-genericTraining net t i = 
-    rnf trainedNet `seq` genericTraining trainedNet t loop where
+genericTraining :: Network -> Trainingdata -> Int -> Double -> Double -> Network
+genericTraining net t (-1) _ _ = net -- stop here
+genericTraining net t i momentum learnRate = 
+    rnf trainedNet `seq` genericTraining trainedNet t loop momentum learnRate where
 	inputTraining = (inputs t) !! i
 	outputTraining = (outputs t) !! i
 	
 	readyNet = setTrainToInputLayer net inputTraining
 	forwarded = forwardPass readyNet
-	trainedNet = backwardPass forwarded outputTraining
+	trainedNet = backwardPass forwarded outputTraining momentum learnRate
 	notNeed = seq trainedNet 1 -- force strict evaluation at this point
 	--trainedNet = forwarded
 	loop	| i == ((learnSteps t)-1) = (-1)
@@ -133,27 +129,27 @@ forwardPass (l:net) = l : forwardPass (seq updatedLs updatedLs) where
 -- preparing stuff for backPassSteps
 -- calculate error (delta of output layer)
 -- reverse net and call backPassSteps
-backwardPass :: Network -> TrainData -> Network
-backwardPass net train = (seq trainedNet trainedNet) where
+backwardPass :: Network -> TrainData -> Double -> Double -> Network
+backwardPass net train momentum learnRate = (seq trainedNet trainedNet) where
 	outputlayer = last net
 	-- step 2
 	calcedErrorLayer = calcLayerError outputlayer train -- calc output error
 	updatedNet = (init net) ++ [calcedErrorLayer] -- updating output layer
 	reversedNet = reverse updatedNet --
-	reversedTrainedNet = backPassSteps reversedNet
+	reversedTrainedNet = backPassSteps reversedNet momentum learnRate
 	trainedNet = reverse reversedTrainedNet
 
 -- do steps 3a, 3b, 3c, network is used reversed
 -- stop at input layer, no calculation needed to this layer
-backPassSteps :: Network -> Network
-backPassSteps [lastLayer] = [lastLayer] -- this is the input layer
-backPassSteps (l:net) = newest_l : backPassSteps updatedNet where 
+backPassSteps :: Network -> Double -> Double -> Network
+backPassSteps [lastLayer] _ _ = [lastLayer] -- this is the input layer
+backPassSteps (l:net) momentum learnRate = newest_l : backPassSteps updatedNet momentum learnRate where 
 	-- in first recursion:
 	-- first element (l) is the output layer (real last layer)
 	-- because net was reverse in backwardPass
 	-- and nextLayer is the layer before the the output layer
 	nextLayer = (head net)
-	new_l = calcLayerDeltaWeigts nextLayer l 		-- step 3a
+	new_l = calcLayerDeltaWeigts nextLayer l momentum learnRate		-- step 3a
 	newest_l = updateLayerWeights new_l				-- step 3b
 	new_nextLayer = calcLayerDelta nextLayer newest_l	-- step 3c
 
@@ -210,28 +206,30 @@ makeStateListOfLayer :: [Neuron] -> [Double]
 makeStateListOfLayer layer = foldl' (\list n -> (state n) : list) [] (reverse layer)
 
 -- creates and return the rightLayer with calculated weight deltas
-calcLayerDeltaWeigts :: [Neuron] -> [Neuron] -> [Neuron]
-calcLayerDeltaWeigts ll rl = foldl' (\list n -> (calcNeuronDeltaWeights ll n) : list) [] (reverse rl)
+calcLayerDeltaWeigts :: [Neuron] -> [Neuron] -> Double -> Double-> [Neuron]
+calcLayerDeltaWeigts ll rl momentum learnRate = foldl' (\list n -> (calcNeuronDeltaWeights ll n momentum learnRate) : list) [] (reverse rl)
 
 -- create new neuron with calculated weight delta (previous layer (only states) also needed: leftLayer)
-calcNeuronDeltaWeights :: [Neuron] -> Neuron -> Neuron
-calcNeuronDeltaWeights ll rn = updatedNeuron where
+calcNeuronDeltaWeights :: [Neuron] -> Neuron -> Double -> Double -> Neuron
+calcNeuronDeltaWeights ll rn momentum learnRate = updatedNeuron where
 	leftLayerStates = makeStateListOfLayer ll	
-	calcedWeights = calcDeltaWeight leftLayerStates rn (deltaWeights rn)
-	updatedNeuron = setDeltaWeights rn calcedWeights
+	calcedWeights = calcDeltaWeight leftLayerStates rn (deltaWeights rn) momentum learnRate
+	updatedNeuron = setDeltaWeights rn calcedWeights 
 
 -- calc recursivly weights between n and rn
--- @param n = neuron
--- @param w/weights - weights of neuron
--- @param rn = right neuron (using ONLY delta of its => TODO?)
--- @param result = recursion result
-calcDeltaWeight :: [Double] -> Neuron -> [Double] -> [Double]
+-- st: left layer states
+-- rn: right neuron (using ONLY delta of its => TODO?)
+-- dws: weights of neuron
+-- momentum: 	Double value [0..1]
+-- learnRate: 	Double value [0..1]
+-- result: recursion result
+calcDeltaWeight :: [Double] -> Neuron -> [Double] -> Double -> Double -> [Double]
 -- Don't use momentum (not need for first learn iteration (no deltaWeights)
 -- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1]
-calcDeltaWeight st rn [] = foldl'(\list s -> (learnRate * (delta rn) * s) : list) [] (reverse st)
+calcDeltaWeight st rn [] momentum learnRate = foldl'(\list s -> (learnRate * (delta rn) * s) : list) [] (reverse st)
 
 -- formla: W(D)[2][1][1] = L * (D)[3][1] * N[2][1] + M * this(t-1)
-calcDeltaWeight st rn dws = zipWith(\s w -> (learnRate * (delta rn) * s + momentum * w)) st dws
+calcDeltaWeight st rn dws momentum learnRate = zipWith(\s w -> (learnRate * (delta rn) * s + momentum * w)) st dws
 
 --
 -- BACKWARD PASS (step 3b)

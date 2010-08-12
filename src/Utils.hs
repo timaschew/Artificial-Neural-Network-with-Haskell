@@ -233,10 +233,10 @@ initTraindata filename = do
 -- let train the net <steps> times
 -- the function / algorithm is very slow :(
 -- 5000 * 4 steps ~ 16 seconds (on a macbook 2GHz)
-trainNet :: Network -> Trainingdata -> Int -> Network
-trainNet net tdata 0 = net
-trainNet net tdata steps = trainNet (seq trained trained) tdata (steps-1) where
-	trained = genericTraining net tdata 0
+trainNet :: Network -> Trainingdata -> Int -> Double -> Double -> Network
+trainNet net tdata 0 _ _ = net
+trainNet net tdata steps momentum learnRate = trainNet (seq trained trained) tdata (steps-1) momentum learnRate where
+	trained = genericTraining net tdata 0 momentum learnRate
 	notNeed = seq trained 1
 	
 

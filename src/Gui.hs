@@ -28,9 +28,10 @@ import Control.Monad
 
 
 -- TODO:
-	-- set momentun + lernrate with values set by gui (pass values to backpropagation algo???)
 	-- some cleanup
 	-- load pattern from file is not activ now, because drawingarea is used as pattern. remove menu item?
+	-- remove Config.hs ????
+	-- deactivate hidden neurons, momentum, learing rate  widgets after 1. training???
 
 -- NOTE: you have to set the dataPath before running Gui.hs
 -- if you run Gui.hs from src folder inlude the following line:
@@ -113,10 +114,10 @@ main = do
     pattern <- readPPMFile patternPath
     patternIO <- newIORef pattern
 
-    momentum <- spinButtonGetValueAsInt momentum_spin
+    momentum <- spinButtonGetValue momentum_spin
     momentumIO <- newIORef momentum
     
-    learningRate <- spinButtonGetValueAsInt learningRate_spin
+    learningRate <- spinButtonGetValue learningRate_spin
     learningRateIO <- newIORef learningRate
     
     cycles <- spinButtonGetValueAsInt cycles_spin
@@ -136,7 +137,7 @@ main = do
 
 	-- BUTTONS
     onClicked clear_button (clearButtonClicked darea)
-    --onClicked clear_button (pixelTest darea)
+    
     onClicked train_button $do
 		nn <- readIORef netIO
 		td <- readIORef tdataIO
@@ -146,7 +147,7 @@ main = do
 		mvar <- newEmptyMVar
 		
 		--let trainedNet = trainNet nn td cycles
-		forkIO (forkTraining mvar nn td cycles)
+		forkIO (forkTraining mvar nn td cycles momentumIO learningRateIO)
 		--putStrLn $ (show trainedNet)
 
 		trainedNet <- takeMVar mvar
@@ -182,7 +183,7 @@ main = do
 		putStrLn ("index: " ++ show bestIdx ++ " bestVal: " ++ show bestVal) -- ++ show resultList)
 		
 		resultList <- readIORef resultListIO
-		appendLog textview $ concat $ zipWith (\r n -> ("[" ++ n ++ "" ++ ": " ++ (printf "%.3f" r) ++ "]  ")) resultList pgmNames    
+		appendLog textview $ concat $ zipWith (\r n -> ("[" ++ n ++ "]" ++ " " ++ (printf "%02.2f%%" (r*100)) ++ "  ")) resultList pgmNames    
 		putStrLn $ show resultList
 	
 	-- SPINBUTTONS
@@ -296,8 +297,11 @@ pixelTest darea textview = do
 	putStrLn ("h: " ++ show height)
 	return pValues
 
-forkTraining mvar net train cycles = do
-    let trainedNet = trainNet net train cycles
+forkTraining mvar net train cycles momentumIO learningRateIO = do
+    momentum <- readIORef momentumIO
+    learningRate <- readIORef learningRateIO
+    
+    let trainedNet = trainNet net train cycles momentum learningRate
     putMVar mvar trainedNet
     putStrLn $ (show trainedNet)
 
@@ -315,41 +319,42 @@ findBestFit netIO patternIO resultListIO = do
 
 setLabel label text = do
     set label [ labelText := text ]
+    return ()
 
 valueSpinned1 widget = do
 	value <- spinButtonGetValue widget
-	putStrLn ("momentum spinned: " ++ show value)
+	return ()
 	
 valueSpinned2 widget = do
 	value <- spinButtonGetValue widget
-	putStrLn ("learning rate spinned: " ++ show value)
+	return ()
 	
 valueSpinned3 widget = do
 	value <- spinButtonGetValueAsInt widget
-	putStrLn ("input neuron count spinned: " ++ show value)
+	return ()
 	
 valueSpinned4 widget = do
 	value <- spinButtonGetValueAsInt widget
-	putStrLn ("hidden neuron count spinned: " ++ show value)
+	return ()
 
 valueSpinned5 widget = do
 	value <- spinButtonGetValueAsInt widget
-	putStrLn ("output neuron count spinned: " ++ show value)
+	return ()
 
 valueSpinned6 widget cyclesIO = do
 	value <- spinButtonGetValueAsInt widget
 	modifyIORef cyclesIO (\_ -> value)
-	putStrLn ("cycles spinned: " ++ show value)
+	return ()
 
 onToggledInputBias cb biasInputIO = do
 	value <- toggleButtonGetActive cb
 	modifyIORef biasInputIO (\_ -> value)
-	putStrLn("biasInput toogled: " ++ show value)
+	return ()
 
 onToggledHiddenBias cb biasHiddenIO = do
 	value <- toggleButtonGetActive cb
 	modifyIORef biasHiddenIO (\_ -> value)
-	putStrLn("biasInput toogled: " ++ show value)
+	return ()
 	
 -- Called when the pointer is moved. See the above comment for the unusual
 -- handling of the Shift-Key.
@@ -447,7 +452,6 @@ appendLog textview newtext = do
     charCount <- textBufferGetCharCount textBuffer
     let delimiter | charCount > 0 = "\n" 
 				  | otherwise = ""
-    --textBufferInsertAtCursor textBuffer (delimiter ++ newtext)
     endIter <- textBufferGetEndIter textBuffer
     textBufferInsert textBuffer endIter (delimiter ++ newtext)
     

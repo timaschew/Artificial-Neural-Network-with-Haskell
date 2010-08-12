@@ -3,10 +3,9 @@ import System.IO
 import Data.Char
 import Data.List
 import Trainingdata
-import Config
 
 	
--- input is the file input (whole string)
+-- input: the file input (whole string)
 getTrainingdata :: String -> Trainingdata
 getTrainingdata input = result where
 	tupel = parseTrainData (lines input) [] []
@@ -58,7 +57,6 @@ getLineData line = result where
 	inputList = map stringToInt (words $ fst tuple)
 	outputList = map stringToInt (words $ snd tuple)
 	result = (inputList, outputList)
-	--result = ((words $ fst tuple), (words $ snd tuple))
 
 -- converts a string to int
 stringToInt :: String -> Int
