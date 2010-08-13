@@ -5,7 +5,6 @@ import Neuron
 import Trainingdata
 import Backpropagation
 import Utils
-import Config
 import TopologyParser
 import TraindataParser
 import GraphicInterface

@@ -1,6 +1,8 @@
-
 module GraphicInterface where
 
+
+import System.Directory
+import Data.List
 
 
 {--
@@ -22,3 +24,23 @@ readPPMFile fn = do
 normalize x = norm where
 	z = read x :: Double
 	norm = z / 255
+
+
+-- returns a list of inputvalues from the given ppm folder.
+-- reads every ppm and generates its inputValues from the pixels values
+getPPMInput :: String -> IO [[Double]]
+getPPMInput path = do
+	let fullPath = path--dataPath ++ path
+	nameList <- getPgmList fullPath
+	fileList <- mapM readPPMFile (map (\x -> fullPath ++ x) nameList)
+
+	return fileList
+
+
+-- scans a directory for ppm files and returns a list of their filenames
+getPgmList :: String -> IO [String]
+getPgmList path = do
+	dirContent <- getDirectoryContents path
+	let pgmList = filter (isSuffixOf ".pgm") dirContent
+	return $ sort pgmList
+	
