@@ -13,13 +13,6 @@ getTrainingdata input = result where
 	to = map (\x -> makeDoubleList x) (snd tupel)
 	result = Trainingdata (length ti) ti to
 
--- input is the file input (whole string)
-makeAlterningTrainingdata :: String -> Int -> Trainingdata
-makeAlterningTrainingdata input steps = result where
-	tupel = parseTrainData2 (lines input) [] []
-	ti = map (\x -> makeDoubleList x) (fst tupel)
-	to = map (\x -> makeDoubleList x) (snd tupel)
-	result = Trainingdata steps ti to
 		
 makeDoubleList :: [Int] -> [Double]
 makeDoubleList intList = doubleList where
@@ -30,16 +23,6 @@ makeDoubleList intList = doubleList where
 parseTrainData :: [String] -> [[Int]] -> [[Int]] -> ([[Int]], [[Int]])
 parseTrainData [] inputList outputList = (inputList, outputList)
 parseTrainData (l:lines) inputList outputList = parseTrainData lines inputList' outputList' where
-	tupel = getLineData l
-	inputList' | isDataLine l = inputList ++ [(fst tupel)] 
-			   | otherwise = inputList -- add nothing
-	outputList' | isDataLine l = outputList ++ [(snd tupel)]
-			    | otherwise = outputList -- add nothing
-
--- result tupel: ( [[input1],[input2],...] , [[output1],[output2],...] )
-parseTrainData2 :: [String] -> [[Int]] -> [[Int]] -> ([[Int]], [[Int]])
-parseTrainData2 [] inputList outputList = (inputList, outputList)
-parseTrainData2 (l:lines) inputList outputList = parseTrainData2 (reverse lines) inputList' outputList' where
 	tupel = getLineData l
 	inputList' | isDataLine l = inputList ++ [(fst tupel)] 
 			   | otherwise = inputList -- add nothing
