@@ -31,12 +31,15 @@ import Control.Monad
 	-- some cleanup
 	-- load pattern from file is not activ now, because drawingarea is used as pattern. remove menu item?
 	-- remove Config.hs ????
-	-- deactivate hidden neurons, momentum, learing rate  widgets after 1. training???
+	-- show loaded trainingfiles & pattern at startup ??
+	-- reset button for network???
 
--- NOTE: you have to set the dataPath before running Gui.hs
--- if you run Gui.hs from src folder inlude the following line:
+-- NOTE: you have to create a Config.hs and set the dataPath before running Gui.hs
+-- if you run Gui.hs from src folder inlude the following line in Config.hs:
 -- dataPath = "../data/"
 
+-- NOTE: mouse pressed event does not work. 
+--          you have to hold the shift button instead, while moving the mouse
 
 main :: IO()
 main = do
@@ -152,6 +155,9 @@ main = do
 
 		trainedNet <- takeMVar mvar
 		
+		-- disable network configs after 1. training
+		disableNetConfigs hiddenNeurons_spin biasInput_check biasHidden_check momentum_spin learningRate_spin
+		
 		modifyIORef netIO (\_ -> trainedNet)
 		modifyIORef trainedCountIO (\_ -> trainedCount + cycles)
 		updateStatusBar statusbar trainedCountIO
@@ -223,7 +229,9 @@ main = do
 		-- update pgmNames
 		updatePgmNames tdataPathIO pgmNamesIO
 		
-		appendLog textview ("network: " ++ genTopologyStr tdata b1 b2 hiddenLen)
+		-- enable network configs on new tdata
+		enableNetConfigs hiddenNeurons_spin biasInput_check biasHidden_check momentum_spin learningRate_spin
+		
 		appendLog textview ("tdata path: " ++ path ++ "\n")
 		putStrLn ("network: " ++ genTopologyStr tdata b1 b2 hiddenLen)
 		putStrLn ("tdata path: " ++ path)
@@ -465,3 +473,17 @@ updateStatusBar statusbar trainedCountIO = do
 	trainedCount <- readIORef trainedCountIO
 	contextId <- statusbarGetContextId statusbar "status"
 	statusbarPush statusbar contextId ("training steps absolved: " ++ show trainedCount)
+
+disableNetConfigs hiddenNeurons_spin biasInput_check biasHidden_check momentum_spin learningRate_spin = do
+    flip widgetSetSensitivity False hiddenNeurons_spin    
+    flip widgetSetSensitivity False biasInput_check
+    flip widgetSetSensitivity False biasHidden_check
+    flip widgetSetSensitivity False momentum_spin
+    flip widgetSetSensitivity False learningRate_spin
+
+enableNetConfigs hiddenNeurons_spin biasInput_check biasHidden_check momentum_spin learningRate_spin = do
+    flip widgetSetSensitivity True hiddenNeurons_spin    
+    flip widgetSetSensitivity True biasInput_check
+    flip widgetSetSensitivity True biasHidden_check
+    flip widgetSetSensitivity True momentum_spin
+    flip widgetSetSensitivity True learningRate_spin
