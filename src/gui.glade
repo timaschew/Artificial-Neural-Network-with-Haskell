@@ -18,20 +18,6 @@
                   <widget class="GtkMenu" id="menu1">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkImageMenuItem" id="imagemenuitem1">
-                        <property name="label">open pattern file</property>
-                        <property name="visible">True</property>
-                        <property name="use_stock">False</property>
-                        <child internal-child="image">
-                          <widget class="GtkImage" id="image3">
-                            <property name="visible">True</property>
-                            <property name="xalign">0.50999999046325684</property>
-                            <property name="stock">gtk-missing-image</property>
-                          </widget>
-                        </child>
-                      </widget>
-                    </child>
-                    <child>
                       <widget class="GtkImageMenuItem" id="imagemenuitem2">
                         <property name="label">open traindata path</property>
                         <property name="visible">True</property>

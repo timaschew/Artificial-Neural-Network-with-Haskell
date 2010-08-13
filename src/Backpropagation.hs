@@ -101,19 +101,6 @@ setTrainToNeuron layer train = zipWith (\n t -> (setState n t)) layer train
 setEmptyNeurons :: [Neuron] -> [Neuron]
 setEmptyNeurons layer = foldl' (\list n -> (setState n 0) : list) [] (reverse layer)
 
--- use this method to do the 1. algo step. Example: printNet forwardPass network [[]] 
--- @params: currentNet newNet
--- @return new network without the input layer (input layer dont have to be calculated)
-{--
-forwardPass :: Network -> Network -> Network
-forwardPass [last] c = c ++ [last]
-forwardPass (l:net) c =  forwardPass updatedLs tmp where 
-	nextLayer = head net
-	updatedNextLayer = calcLayer l nextLayer
-	updatedLs = updatedNextLayer : (drop 1 net)
-	tmp = c ++ [l]
---}
-
 forwardPass :: Network -> Network
 forwardPass [] = []
 forwardPass (l:net) = l : forwardPass (seq updatedLs updatedLs) where
@@ -123,8 +110,6 @@ forwardPass (l:net) = l : forwardPass (seq updatedLs updatedLs) where
 					 | otherwise = []
 	updatedLs | length net > 0 = updatedNextLayer : (drop 1 net)
 			  | otherwise = []
-
-
 
 -- preparing stuff for backPassSteps
 -- calculate error (delta of output layer)
@@ -172,13 +157,13 @@ calcLayerHelper n ll = updatedNeuron where
 
 -- calculate state * weight + offset
 -- use offset for calculation in previous recursion
--- @param [Neuron]:	Neuron list of a single layer
--- @param [Double]: Neuron weights (w.i) of layer n for a certain Neuron of layer n+1: 
+-- [Neuron]:	Neuron list of a single layer
+-- [Double]: Neuron weights (w.i) of layer n for a certain Neuron of layer n+1: 
 --
 --	[List of Neurons] ---- w.i ---->  [single Neuron] (layer n + 1)
 --
--- @return Double: offset
--- @return Double: netinput (sum) for a certain Neuron of layer n + 1
+-- return Double: offset
+-- return Double: netinput (sum) for a certain Neuron of layer n + 1
 calcNeuron :: [Neuron] -> [Double] -> Double
 calcNeuron states weights = (seq result result) where
 	list = zipWith (\s w -> (state s) * w) states weights

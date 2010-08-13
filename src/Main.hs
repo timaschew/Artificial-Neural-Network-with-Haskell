@@ -17,19 +17,6 @@ import Control.Monad
 use main and call there some examples for GHC compiler
 GHCi can call examples directly
 
-showError 'network'
-	show delta (quadratic error) for all output neurons
-
-showOutput 'network' 'traindata' :: [Double]
-	print output for traindata with the given network
-
---}
--- 17x22 net, 2000 cycles, 0.pgm, ..., 9.pgm (times new roman)
-
-{--
-	INFO: following Exeption means that your net does not match with the trainingsdata / traindata
-	
-	[*** Exception: Backpropagation.hs:(96,0)-(101,26): Non-exhaustive patterns in function setTrainToNeuron
 --}
 
 main = do
@@ -41,7 +28,6 @@ main = do
 	let saveAction	| (length args == 3) = (args !! 2)
 			| otherwise = ""
 			
-	--putStrLn (usecase ++ " - " ++ (show steps))
 	case (args !! 0) of
 		"pgm1" -> universalUseCase (staticPPMexample steps) saveAction
 		"xor" -> universalUseCase (xorExample steps) saveAction
@@ -97,18 +83,6 @@ numberPPMexample steps = do
 	
 	return (trainNet net tdata steps 0.35 0.15)	
 
-------------------------------------------------------------------------
--- Utils
-------------------------------------------------------------------------
-showOutputFor net path = do
-	tin <- readPPMFile path
-	showOutput net tin
-	
-showNumsOutput net path = do
-	mapM_ (\x -> do
-		putStr ("[" ++ show x ++ "]: ")
-		showOutputFor net (dataPath ++ path ++ show x ++ ".pgm")) [0..9]
-		
 ------------------------------------------------------------------------
 -- DEMOS
 ------------------------------------------------------------------------

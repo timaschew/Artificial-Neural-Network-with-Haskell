@@ -17,6 +17,8 @@ dataPath = "../data/"
 {----------------------------------------------------------------------
 	Print Utils
 ----------------------------------------------------------------------}
+-- show delta (quadratic error) for all output neurons
+showError :: Network -> IO ()
 showError net = do
 	let outputLayer = last net
 	let l = map delta outputLayer
@@ -25,6 +27,7 @@ showError net = do
 	putStr "]"
 	putStrLn ""
 
+-- print output for traindata with the given network
 showOutput :: Network -> TrainData -> IO ()
 showOutput net  train = do
 	let l = work net train
@@ -32,6 +35,15 @@ showOutput net  train = do
 	mapM_ (\v -> printf "%.3f " v) l
 	putStr "]"
 	putStrLn ""
+
+showOutputFor net path = do
+	tin <- readPPMFile path
+	showOutput net tin
+	
+showNumsOutput net path = do
+	mapM_ (\x -> do
+		putStr ("[" ++ show x ++ "]: ")
+		showOutputFor net (dataPath ++ path ++ show x ++ ".pgm")) [0..9]
 	
 
 -- print network (neuron index and state)
@@ -53,8 +65,6 @@ initNetworkFromFile filename = do
 -- The hiddenlayer is set automatically to half size of input length but max 15 neurons and at least 2, bias set default
 initNetworkFromTdata :: Trainingdata -> IO Network
 initNetworkFromTdata tdata = do
---initNetworkFromTdata ioTdata = do
-	--tdata <- ioTdata
 	let inputLen = length $ head (inputs tdata)		-- get size of one input
 	let outputLen = length $ head (outputs tdata)	-- get size of one output
 	let hiddenLen | inputLen > 30 = 15	-- max
@@ -65,7 +75,6 @@ initNetworkFromTdata tdata = do
 -- generates a network from input string
 initNetwork :: String -> IO Network
 initNetwork input = do
-	--input <- readFile filename
 	randNums <- mapM (\x -> getRandNum) [1..countNeededRandNums input]
 	let net = getTopology input randNums
 	; return net
@@ -103,59 +112,6 @@ work net inputData = result where
 	forwarded = forwardPass inputted
 	result = makeStateListOfLayer (last forwarded)
 
-
--- DB function - save weights
-
-saveWeights net "" = do
-	writeFile "/dev/null" "nothing"
-saveWeights net fn = do
-	let s = net2weightsString (tail net) (head net) []
-	let sizeList = ("# " ++ unwords (map show (map length net)))
-	writeFile fn (unlines ([sizeList] ++ s))
-
-net2weightsString :: Network -> [Neuron] -> [String] -> [String]
-net2weightsString [] prevLayer c = c
-net2weightsString (l:rest) prevLayer c = net2weightsString rest l tmp where
-	prevNeurons = length prevLayer
-	weights = neurons2weightsString l []
-	tmp = c ++ ["# " ++ (show prevNeurons) ++ " " ++ (show (length l))] ++ weights
-
-neurons2weightsString [] c = c
-neurons2weightsString (n:layer) c = neurons2weightsString layer tmp where
-	tmp = c ++ [doubleList2String (weights n)]
-
-
-doubleList2String l = tmp where
-	sl = map show l
-	tmp = unwords sl
-	
-	
--- DB function - load weights
-
---loadWeights :: String -> IO Network
-loadWeights fn = do
-	input <- readFile fn
-	let inp = lines input
-	let s = head inp -- 10 3 => 10 input neurons
-	let inputSize = readI ((words s) !! 1)	-- '#' is !! 0
-	--putStrLn ("" ++ (show inputSize))
-	
-	-- TODO: test if the loaded network is the same.
-	-- only for 3layer nets
-	let hiddenSize = readI ((words s) !! 2)
-	let outputSize = readI ((words s) !! 3)
-	
-	let inputW = map (\x -> map (\w -> read w ::Double) (words x)) $ take hiddenSize (drop 2 inp)
-	let hiddenW = map (\x -> map (\w -> read w ::Double) (words x)) $ take outputSize (drop (3 + length inputW) inp)
-	
-	let inputLayer = map (\x -> defaultNeuron) [1..inputSize]
-	let hiddenLayer = map (\x -> defaultNeuron {weights = x})  inputW
-	let outputLayer = map (\x -> defaultNeuron {weights = x})  hiddenW
-	
-	let net = [inputLayer, hiddenLayer, outputLayer]
-	
-	return net
-	
 readI x = read x :: Int
 
 -- generates a Trainingsdata from the ppm of the given directory

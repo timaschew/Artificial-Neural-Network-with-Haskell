@@ -26,19 +26,12 @@ import Graphics.UI.Gtk.Glade
 import Control.Monad
 
 
--- TODO:
-	-- some cleanup
-	-- load pattern from file is not activ now, because drawingarea is used as pattern. remove menu item?
-	-- remove Config.hs ????
-	-- show loaded trainingfiles & pattern at startup ??
-	-- reset button for network???
+{--
 
--- NOTE: you have to create a Config.hs and set the dataPath before running Gui.hs
--- if you run Gui.hs from src folder inlude the following line in Config.hs:
--- dataPath = "../data/"
+NOTE: mouse pressed event does not work. 
+      you have to hold the shift button instead, while moving the mouse
+--}
 
--- NOTE: mouse pressed event does not work. 
---          you have to hold the shift button instead, while moving the mouse
 
 main :: IO()
 main = do
@@ -73,7 +66,6 @@ main = do
     result_label <- xmlGetWidget xml castToLabel "label10"
      
     -- menuitems
-    menuitem1 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem1"
     menuitem2 <- xmlGetWidget xml castToImageMenuItem "imagemenuitem2"
 
 	-- checkbutton
@@ -85,17 +77,16 @@ main = do
              
     flip widgetSetSensitivity False inputNeurons_spin    
     flip widgetSetSensitivity False outputNeurons_spin
-        
+    
+    -- init traindata
     tdataPathIO <- newIORef (dataPath ++ "traindata/img/10_12_anton/versions/all/")
-    patternPathIO <- newIORef (dataPath ++ "traindata/img/10_12_great_times/" ++ "1.pgm")
-    -- TODO: 1) upscale pattern from file and insert it into drawingarea => get pattern only from drawingarea
-    --       2) OR use a flag für DAREA / FILE ....
-    --patternModeIO <- newIORef "DAREA"	-- (DAREA|FILE)
-                
-    --tdata <- initTraindata (dataPath ++ "traindata/xor/trainingdata")
     tdataPath <- readIORef tdataPathIO
     tdata <- dirToTrainData tdataPath
     tdataIO <- newIORef tdata
+    
+    -- init pattern
+    pattern <- readPPMFile (dataPath ++ "traindata/img/10_12_great_times/" ++ "1.pgm")
+    patternIO <- newIORef pattern
     
     biasInput <- toggleButtonGetActive biasInput_check
     biasInputIO <- newIORef biasInput
@@ -106,15 +97,9 @@ main = do
     hiddenNeurons <- spinButtonGetValueAsInt hiddenNeurons_spin
     hiddenNeuronsIO <- newIORef hiddenNeurons
     
-    --net <- initNetwork "4b\n10b\n1"
     net <- initNetwork (genTopologyStr tdata biasInput biasHidden hiddenNeurons)
     netIO <- newIORef net
     updateNetworkSize tdata inputNeurons_spin outputNeurons_spin
-    
-    --let pattern = [1.0, 0.0]
-    patternPath <- readIORef patternPathIO
-    pattern <- readPPMFile patternPath
-    patternIO <- newIORef pattern
 
     momentum <- spinButtonGetValue momentum_spin
     momentumIO <- newIORef momentum
@@ -133,6 +118,7 @@ main = do
     updatePgmNames tdataPathIO pgmNamesIO
 
     updateStatusBar statusbar trainedCountIO
+    appendLog textview ("tdata path: " ++ tdataPath ++ "\n")
 
 ------------------------------------------------------------------------
 -- REGISTER EVENTS
@@ -146,17 +132,15 @@ main = do
 		cycles <- readIORef cyclesIO
 		trainedCount <- readIORef trainedCountIO
 		
+		-- training
 		mvar <- newEmptyMVar
-		
-		--let trainedNet = trainNet nn td cycles
 		forkIO (forkTraining mvar nn td cycles momentumIO learningRateIO)
-		--putStrLn $ (show trainedNet)
-
 		trainedNet <- takeMVar mvar
 		
 		-- disable network configs after 1. training
 		disableNetConfigs hiddenNeurons_spin biasInput_check biasHidden_check momentum_spin learningRate_spin
 		
+		-- update network
 		modifyIORef netIO (\_ -> trainedNet)
 		modifyIORef trainedCountIO (\_ -> trainedCount + cycles)
 		updateStatusBar statusbar trainedCountIO
@@ -164,16 +148,13 @@ main = do
 		return ()	
     
     onClicked work_button $do
-		pValues <- pixelTest darea textview
-		--putStrLn (show pValues)
+		pValues <- pixelValues darea textview
 		
 		let inputLen = fromIntegral $ length $ head (inputs tdata)	-- get size of one input
 		let scale = 12 -- 120x144 / 12 => 10x12 - has to match the input layer length!
 		putStrLn ("scaleDiv: " ++ show scale)
 		let width = 120
-		--let pattern = map (\x -> realToFrac (pValues !! x)) [x | x <- [0 .. (length pValues)-1], x `mod` scale == 0]
 		let pattern = map (\x -> realToFrac (pValues !! x)) [x | x <- [0 .. (length pValues)-1], x `mod` scale == 0 && (x `mod` (width*scale)) < width]
-		--let pattern = scaleDown pValues 120 144 scale
 		modifyIORef patternIO (\_ -> pattern)
 		putStrLn (show $ length pattern)
     
@@ -199,15 +180,6 @@ main = do
     --onValueSpinned outputNeurons_spin (valueSpinned5 outputNeurons_spin)
     onValueSpinned cycles_spin (valueSpinned6 cycles_spin cyclesIO)
     
-    -- SELECT PATTERN FILE
-    afterActivateLeaf menuitem1 $do
-		openFileDialog window "Please choose the pattern file" patternPathIO
-		path <- readIORef patternPathIO
-		pattern <- readPPMFile path
-		modifyIORef patternIO (\_ -> pattern)
-		appendLog textview ("pattern file path: " ++ path ++ "\n")
-		putStrLn ("pattern file path: " ++ path)
-	
 	-- SELECT TDATA PATH	
     afterActivateLeaf menuitem2 $do
 		openFolderDialog window "Please choose the tdata path" tdataPathIO
@@ -276,14 +248,13 @@ updatePgmNames tdataPathIO pgmNamesIO = do
 	let pgmNames = map (\x -> fst (break (=='.') x)) pgmList	
 	modifyIORef pgmNamesIO (\_ -> pgmNames)
 
-pixelTest darea textview = do
+-- returns a downscaled list of pixel values. 
+-- (from 120x144 drawingarea -> to 10x12 pattern, because of 10x12 trainingdata files
+pixelValues darea textview = do
 	drw <- widgetGetDrawWindow darea
-	--(width, height) <- drawableGetSize drw
-	--(w,h) <- drawableGetSize drw
 	
-	-- !!! width was 128 instead 120...
-	let width = 120 --realToFrac w	
-	let height = 144 --realToFrac h
+	let width = 120
+	let height = 144
 	
 	pixbuf <- pixbufGetFromDrawable drw (Rectangle 0 0 width height)
 	pixels <- (pixbufGetPixels (fromJust pixbuf) :: IO (PixbufData Int Word8)) 
@@ -302,7 +273,6 @@ pixelTest darea textview = do
 	let pgmData = zipWith (\p i -> if i `mod` 20 == 0 then (show p ++"\n") else (show p ++ " ")) pValues [1..]
 	writeFile "drawingarea.pgm" (pgmHeader ++ (concat pgmData))
 	
-	--putStrLn (show pValues)
 	putStrLn ("w: " ++ show width)
 	putStrLn ("h: " ++ show height)
 	return pValues
@@ -411,26 +381,6 @@ clearButtonClicked darea = do
         rectangle 0 0 width height
         fill
 
-
-openFileDialog parentWindow title filePathIO = do
-    dialog <- fileChooserDialogNew 
-                    (Just title)
-                    (Just parentWindow)
-                    FileChooserActionOpen	[("gtk-cancel", ResponseCancel), ("gtk-open", ResponseAccept)]
-    widgetShow dialog
-    resp <- dialogRun dialog
-    case resp of
-        ResponseAccept      -> do filePath <- fileChooserGetFilename dialog
-                                  let path = case filePath of
-                                        (Just s) -> s
-                                        Nothing  -> error "Error on ResponseAccept in openFileDialog"
-                                  modifyIORef filePathIO (\_ -> path)
-        ResponseCancel      -> return ()
-        ResponseDeleteEvent -> return ()
-        _                   -> return ()
-    widgetHide dialog
-
-
 openFolderDialog parentWindow title filePathIO = do
     dialog <- fileChooserDialogNew 
                     (Just title)
@@ -449,7 +399,6 @@ openFolderDialog parentWindow title filePathIO = do
         _                   -> return ()
     widgetHide dialog
     
-
 
 updateNetworkSize tdata inputNeurons_spin outputNeurons_spin = do
 	let inputLen = length $ head (inputs tdata)		-- get size of one input
