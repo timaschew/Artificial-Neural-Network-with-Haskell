@@ -227,6 +227,9 @@ main = do
 		setLabel result_label "--"
 		-- update pgmNames
 		updatePgmNames tdataPathIO pgmNamesIO
+		-- update statusbar
+		modifyIORef trainedCountIO (\_ -> 0)
+		updateStatusBar statusbar trainedCountIO
 		
 		-- enable network configs on new tdata
 		enableNetConfigs hiddenNeurons_spin biasInput_check biasHidden_check momentum_spin learningRate_spin
