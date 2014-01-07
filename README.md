@@ -29,3 +29,7 @@ Examples
 	code format 
 
 A text with a `highlighted` word. 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/timaschew/artificial-neural-network-with-haskell/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
